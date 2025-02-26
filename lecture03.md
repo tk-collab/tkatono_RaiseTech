@@ -9,4 +9,4 @@
 - DBサーバー停止後は下記のエラーとなる
 ![DBサーバー（停止後）](screenshots/Screenshot_20250223-221834.png)
 ## railsのどの構成管理ツールを使っているか
-![構成管理ツール](screenshots/Screenshot_20250226-191753)
+![構成管理ツール](screenshots/Screenshot_20250226-191753.png)
