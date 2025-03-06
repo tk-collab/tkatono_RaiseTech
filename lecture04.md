@@ -8,4 +8,4 @@
 4. Security Group
 ![SecurityGroup(Inbound)](screenshots/Common%20VPC/Screenshot_20250305-201756.png)
 ![SecurityGroup(Outbound)](screenshots/Common%20VPC/Screenshot_20250305-201812.png)
-5. 結果 ![結果](screenshot/Common%20VPC/Screenshot_20250228-193646.png)
+5. 結果 ![結果](screenshots/Common%20VPC/Screenshot_20250228-193646.png)
