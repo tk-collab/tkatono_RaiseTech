@@ -1,0 +1,523 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: sample template
+
+Parameters:
+  NameBase: # ←これが名前⽤変数の論理ID
+    Description: this is base name.
+    Type: String
+    Default: "RaiseTekkun"
+
+Resources:
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.4.0/22
+      InstanceTenancy: default
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MyVPC
+  # パブリックサブネット作成
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.6.0/26
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: PublicSubnet1
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.7.0/26
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 1, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: PublicSubnet2  
+  # プライベートサブネット作成
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.5.0/26
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet1
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.4.128/26
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [ 1, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet2
+
+  # インターネットゲートウェイ作成
+  MyIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: MyIGW
+
+  # VPCにインターネットゲートウェイをアタッチ
+  AttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVPC
+      InternetGatewayId: !Ref MyIGW
+
+  # パブリックサブネット（AZ1）用のルートテーブル作成
+  PublicRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: PublicRouteTable1
+
+  # パブリックサブネット（AZ1）用のインターネットゲートウェイへのルート作成
+  PublicRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyIGW
+
+  # パブリックサブネット（AZ1）にルートテーブルを関連付け
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable1
+
+  # パブリックサブネット（AZ2）用のルートテーブル作成
+  PublicRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: PublicRouteTable2
+
+  # パブリックサブネット（AZ2）用のインターネットゲートウェイへのルート作成
+  PublicRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyIGW
+
+  # パブリックサブネット（AZ2）にルートテーブルを関連付け
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable2
+
+  # S3 バケット（静的ウェブサイトホスティング用）
+  StaticWebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      WebsiteConfiguration:
+        IndexDocument: "index.html"
+        ErrorDocument: "error.html"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Name
+          Value: StaticWebsiteBucket
+
+# セキュリティグループ1作成（EC2インスタンス用）
+  MySecurityGroupEC21:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow SSH and HTTP"
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
+
+# セキュリティグループ2作成（EC2インスタンス用）
+  MySecurityGroupEC22:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow Only HTTP"
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          SourceSecurityGroupId: !Ref MySecurityGroupELB  # EC2からのアクセスのみ許可
+
+# セキュリティグループ3作成（ELB用）
+  MySecurityGroupELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow Only HTTP"
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
+
+  # セキュリティグループ4作成（RDS用）
+  MySecurityGroupRDS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow Only HTTP"
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref MySecurityGroupEC22  # EC2からのアクセスのみ許可
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
+
+  # EC2インスタンス1作成
+  EC2Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: raiseTech_keypair_lecture05  # 既存のキーペア名を指定
+      ImageId: ami-072298436ce5cb0c4 # 最新のAmazon Linux 2023 AMIのIDを指定してください
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref MySecurityGroupEC21
+      Tags:
+        - Key: Name
+          Value: EC2Instance1
+
+  # EC2インスタンス2作成
+  EC2Instance2:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            "/tmp/index.html":
+              content: |
+                <!DOCTYPE html>
+                <html>
+                <head><title>My Static Website</title></head>
+                <body><h1>Welcome to My Static Website!</h1></body>
+                </html>
+              mode: "000644"
+          commands:
+            01_upload_file:
+              command: !Sub "aws s3 cp /tmp/index.html s3://${StaticWebsiteBucket}/index.html"
+    Properties:
+      InstanceType: t2.micro
+      KeyName: raiseTech_keypair_lecture05  # 既存のキーペア名を指定
+      ImageId: ami-06d57dd2fd67ed507 # 最新のAmazon Linux 2 AMIのIDを指定してください
+      SubnetId: !Ref PublicSubnet1
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      SecurityGroupIds:
+        - !Ref MySecurityGroupEC22
+      Tags:
+        - Key: Name
+          Value: EC2Instance2      
+      ########## ここからがユーザーデータ ##########
+      UserData:
+        Fn::Base64: !Sub |  
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Instance2 --region ${AWS::Region}
+      # UserData:
+      #   Fn::Base64: |
+      #     #!/bin/bash -e
+      #     exec > /var/log/user-data.log 2>&1
+      #     sudo -u ec2-user bash << 'EOF'
+      #     cd
+      #     sudo yum install -y git
+      #     sudo yum install -y gnupg2
+      #     gpg2 --keyserver hkp://keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+      #     # command curl -sSL https://rvm.io/mpapis.asc | gpg2 --import -
+      #     # command curl -sSL https://rvm.io/pkuczynski.asc | gpg2 --import -
+      #     \curl -sSL https://get.rvm.io | bash -s stable
+      #     ls -la /home/ec2-user/.rvm
+      #     # RVMインストール（インストールされていない場合）
+      #     if [ ! -d "/home/ec2-user/.rvm" ]; then
+      #       \curl -sSL https://get.rvm.io | bash -s stable
+      #     fi
+      #     source ~/.rvm/scripts/rvm
+      #     rvm install 3.2.3
+      #     rvm use 3.2.3 --default
+      #     ruby -v
+      #     bundler -v
+      #     git clone https://github.com/yuta-ushijima/raisetech-live8-sample-app.git
+      #     cd ./raisetech-live8-sample-app
+      #     curl -fsSL https://raw.githubusercontent.com/MasatoshiMizumoto/raisetech_documents/main/aws/scripts/mysql_amazon_linux_2.sh | sh
+      #     bin/rails -v
+      #     sudo yum groupinstall "Development Tools" -y
+      #     sudo yum install gcc-c++ -y
+      #     gem install sassc -v 2.4.0
+      #     rm -f Gemfile.lock
+      #     gem install bigdecimal -v 3.1.9
+      #     gem uninstall date -y
+      #     bundle clean --force
+      #     gem install date -v '3.4.1' --no-document
+      #     bundle install --verbose
+      #     rails -v
+      #     curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
+      #     source ~/.bashrc
+      #     nvm install --lts
+      #     nvm install 17.9.1
+      #     nvm use 17.9.1
+      #     nvm -v
+      #     npm install -g yarn
+      #     yarn -v
+      #     nvm alias default 17.9.1
+      #     bundle config set force_ruby_platform true
+      #     bundle install --gemfile /home/ec2-user/raisetech-live8-sample-app/Gemfile
+      #     ls -l config/database.yml*
+      #     cp config/database.yml.sample config/database.yml
+      #     ls -l /tmp/mysql.sock
+      #     sudo systemctl restart mysqld
+      #     cd ./config
+      #     DB_CONFIG="config/database.yml"
+      #     sed -i 's/^\(\s*socket:\) /tmp/mysql.sock/\1 /var/lib/mysql/mysql.sock/' $DB_CONFIG
+      #     sed -i 's/^\(\s*password:\)/\1 zccCe-b3GywJ/' $DB_CONFIG
+      #     cat config/database.yml
+      #     yarn install
+      #     sed -i 's/port ENV.fetch("PORT") { 3000 }/# port ENV.fetch("PORT") { 3000 }/' config/puma.rb
+      #     cat config/puma.rb
+      #     pkill -f puma
+      #     bundle exec puma -C config/puma.rb
+      #     netstat -anp | grep puma
+      #     sudo yum update -y
+      #     sudo amazon-linux-extras enable nginx1
+      #     sudo yum install -y nginx
+      #     sudo systemctl start nginx
+      #     sudo systemctl enable nginx
+      #     sudo systemctl status nginx
+      #     sed -i 's/proxy_pass http://unix:/var/run/puma.sock;/proxy_pass http://unix:/home/ec2-user/raisetech-live8-sample-app/tmp/sockets/puma.sock;/' /etc/nginx/conf.d/app.conf
+      #     sed -i 's/root /path/to/your/app/public;/root /home/ec2-user/raisetech-live8-sample-app/public;/' /etc/nginx/conf.d/app.conf
+      #     cat /etc/nginx/conf.d/app.conf
+      #     sudo nginx -t
+      #     sudo systemctl restart nginx
+      #     sed -i 's#WorkingDirectory=/path/to/your/app#WorkingDirectory=/home/ec2-user/raisetech-live8-sample-app#' /etc/nginx/conf.d/app.conf
+      #     sed -i 's#ExecStart=.*#ExecStart=/home/ec2-user/.rbenv/shims/bundle exec puma -C config/puma.rb#' /etc/nginx/conf.d/app.conf
+      #     sed -i 's#StandardOutput=journal#StandardOutput=file:/home/ec2-user/raisetech-live8-sample-app/log/puma.log#' /etc/nginx/conf.d/app.conf
+      #     sed -i 's#StandardError=journal#StandardError=file:/home/ec2-user/raisetech-live8-sample-app/log/puma.err.log#' /etc/nginx/conf.d/app.conf
+      #     cat /etc/nginx/conf.d/app.conf
+      #     chmod -R 777 ./tmp/sockets
+      #     chmod -R 777 ./tmp/pids
+      #     chmod -R 777 ./tmp
+      #     chmod -R 777 /ec2-user/raisetech-live8-sample-app
+      #     chmod -R 777 /ec2-user
+      #     sudo systemctl restart puma
+      #     sed -i 's#StandardError=journal#StandardError=file:/home/ec2-user/raisetech-live8-sample-app/log/puma.err.log#' /etc/nginx/conf.d/app.conf
+      #     echo "config.hosts << 'raisetech-alb-lecture05-2-1569213835.ap-northeast-1.elb.amazonaws.com'" | sudo tee -a config/environments/production.rb
+      #     echo "config.hosts << 'raisetech-alb-lecture05-2-1569213835.ap-northeast-1.elb.amazonaws.com'" | sudo tee -a /home/ec2-user/raisetech-live8-sample-app/config/environments/development.rb
+      #     /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Instance2 --region ${AWS::Region}
+      #     sudo systemctl enable amazon-ssm-agent
+      #     sudo systemctl start amazon-ssm-agent
+      #     EOF
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref MyVPC
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      Targets:
+        - Id: !Ref EC2Instance2
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: "80"
+      HealthCheckPath: "/"
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+
+  # ALB作成
+  MyALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: MyALB
+      Subnets:
+        - !Ref PublicSubnet1 
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref MySecurityGroupELB
+      Scheme: internal
+      LoadBalancerAttributes:
+        - Key: "deletion_protection.enabled"
+          Value: "false"
+      Tags:
+        - Key: Name
+          Value: MyALB
+
+  # ALBリスナー（HTTP:80）
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref MyALB
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  InstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+
+  # EC2S3AccessRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service: ec2.amazonaws.com
+  #           Action: sts:AssumeRole
+  #     Path: /
+  #     Policies:
+  #       - PolicyName: EC2S3UploadPolicy
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             - Effect: Allow
+  #               Action:
+  #                 - s3:PutObject
+  #                 - s3:GetObject
+  #               Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
+
+  SSMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+
+  # DB サブネットグループ
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnet group for RDS"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: MyDBSubnetGroup
+  # RDS インスタンス
+  MyRDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: "my-rds-instance"
+      Engine: "mysql"
+      EngineVersion: "8.0"
+      DBInstanceClass: "db.t4g.micro"
+      AllocatedStorage: 20
+      StorageType: "gp2"
+      MultiAZ: false  # シングルAZ構成
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref MySecurityGroupRDS
+      MasterUsername: "admin"
+      MasterUserPassword: "Password123!"  # Secrets Manager推奨
+      BackupRetentionPeriod: 0
+      Tags:
+        - Key: Name
+          Value: MyRDSInstance
+  # バケットポリシー（公開アクセスを許可）
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticWebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: "s3:GetObject"
+            Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
+  # # S3 バケットのデフォルトオブジェクト（index.html）
+  # WebsiteIndexObject:
+  #   Type: AWS::S3::BucketObject
+  #   Properties:
+  #     Bucket: !Ref StaticWebsiteBucket
+  #     Key: "index.html"
+  #     ContentType: "text/html"
+  #     Content: |
+  #       <!DOCTYPE html>
+  #       <html>
+  #       <head>
+  #         <title>My Static Website</title>
+  #       </head>
+  #       <body>
+  #         <h1>Welcome to My Static Website</h1>
+  #       </body>
+  #       </html>
+Outputs:
+  WebsiteURL:
+    Description: "URL of the static website"
+    Value: !Sub "http://${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
+  # LoadBalancers:
+  #   - AvailabilityZones:
+  #       - LoadBalancerAddresses: []
+  #         SubnetId: subnet-045415b8f543dea98
+  #         ZoneName: ap-northeast-1a
+  #       - LoadBalancerAddresses: []
+  #         SubnetId: subnet-09afee4a4a333b63d
+  #         ZoneName: ap-northeast-1c
+  #     CanonicalHostedZoneId: Z14GRHDCWA56QT
+  #     CreatedTime: '2025-03-17T14:08:17.523000+00:00'
+  #     DNSName: internal-raiseTech-ALB-lecture05-731935225.ap-northeast-1.elb.amazonaws.com
+  #     EnablePrefixForIpv6SourceNat: 'off'
+  #     IpAddressType: ipv4
+  #     LoadBalancerArn: arn:aws:elasticloadbalancing:ap-northeast-1:396608767997:loadbalancer/app/raiseTech-ALB-lecture05/4a0ddeceefc72e47
+  #     LoadBalancerName: raiseTech-ALB-lecture05
+  #     Scheme: internal
+  #     SecurityGroups:
+  #       - sg-0b5983fb827f4305a
+  #     State:
+  #       Code: active
+  #     Type: application
+  #     VpcId: vpc-0e2a3efff50c242e9
