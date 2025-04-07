@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: 2010-09-09
 
 Description: sample template
 
@@ -6,7 +6,7 @@ Parameters:
   NameBase: # ←これが名前⽤変数の論理ID
     Description: this is base name.
     Type: String
-    Default: "RaiseTekkun"
+    Default: RaiseTekkun
 
 Resources:
   MyVPC:
@@ -18,7 +18,7 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: MyVPC
+          Value: !Sub "${NameBase}-MyVPC"
   # パブリックサブネット作成
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -29,7 +29,8 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs "" ]
       Tags:
         - Key: Name
-          Value: PublicSubnet1
+          Value: !Sub "${NameBase}-PublicSubnet1"
+          
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -39,7 +40,7 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs "" ]
       Tags:
         - Key: Name
-          Value: PublicSubnet2  
+          Value: !Sub "${NameBase}-PublicSubnet2"
   # プライベートサブネット作成
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -50,7 +51,8 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs "" ]
       Tags:
         - Key: Name
-          Value: PrivateSubnet1
+          Value: !Sub "${NameBase}-PrivateSubnet1"
+          
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -60,7 +62,7 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs "" ]
       Tags:
         - Key: Name
-          Value: PrivateSubnet2
+          Value: !Sub "${NameBase}-PrivateSubnet2"
 
   # インターネットゲートウェイ作成
   MyIGW:
@@ -68,7 +70,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: MyIGW
+          Value: !Sub "${NameBase}-MyIGW"
 
   # VPCにインターネットゲートウェイをアタッチ
   AttachIGW:
@@ -84,7 +86,7 @@ Resources:
       VpcId: !Ref MyVPC
       Tags:
         - Key: Name
-          Value: PublicRouteTable1
+          Value: !Sub "${NameBase}-PublicRouteTable1"
 
   # パブリックサブネット（AZ1）用のインターネットゲートウェイへのルート作成
   PublicRoute1:
@@ -108,7 +110,7 @@ Resources:
       VpcId: !Ref MyVPC
       Tags:
         - Key: Name
-          Value: PublicRouteTable2
+          Value: !Sub "${NameBase}-PublicRouteTable2"
 
   # パブリックサブネット（AZ2）用のインターネットゲートウェイへのルート作成
   PublicRoute2:
@@ -130,8 +132,8 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       WebsiteConfiguration:
-        IndexDocument: "index.html"
-        ErrorDocument: "error.html"
+        IndexDocument: index.html
+        ErrorDocument: error.html
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false
@@ -139,72 +141,72 @@ Resources:
         RestrictPublicBuckets: false
       Tags:
         - Key: Name
-          Value: StaticWebsiteBucket
+          Value: !Sub "${NameBase}-StaticWebsiteBucket"
 
 # セキュリティグループ1作成（EC2インスタンス用）
   MySecurityGroupEC21:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Allow SSH and HTTP"
+      GroupDescription: Allow SSH and HTTP
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
-        - IpProtocol: "tcp"
-          FromPort: "22"
-          ToPort: "22"
-          CidrIp: "0.0.0.0/0"
-        - IpProtocol: "tcp"
-          FromPort: "80"
-          ToPort: "80"
-          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
-        - IpProtocol: "-1"
-          CidrIp: "0.0.0.0/0"
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
 
 # セキュリティグループ2作成（EC2インスタンス用）
   MySecurityGroupEC22:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Allow Only HTTP"
+      GroupDescription: Allow Only HTTP
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
-        - IpProtocol: "tcp"
-          FromPort: "22"
-          ToPort: "22"
-          CidrIp: "0.0.0.0/0"
-        - IpProtocol: "tcp"
-          FromPort: "80"
-          ToPort: "80"
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
           SourceSecurityGroupId: !Ref MySecurityGroupELB  # EC2からのアクセスのみ許可
 
 # セキュリティグループ3作成（ELB用）
   MySecurityGroupELB:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Allow Only HTTP"
+      GroupDescription: Allow Only HTTP
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
-        - IpProtocol: "tcp"
-          FromPort: "80"
-          ToPort: "80"
-          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
-        - IpProtocol: "-1"
-          CidrIp: "0.0.0.0/0"
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
 
   # セキュリティグループ4作成（RDS用）
   MySecurityGroupRDS:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Allow Only HTTP"
+      GroupDescription: Allow Only HTTP
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
-        - IpProtocol: "tcp"
+        - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
           SourceSecurityGroupId: !Ref MySecurityGroupEC22  # EC2からのアクセスのみ許可
       SecurityGroupEgress:
-        - IpProtocol: "-1"
-          CidrIp: "0.0.0.0/0"
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
 
   # EC2インスタンス1作成
   EC2Instance1:
@@ -218,7 +220,7 @@ Resources:
         - !Ref MySecurityGroupEC21
       Tags:
         - Key: Name
-          Value: EC2Instance1
+          Value: !Sub "${NameBase}-EC2Instance1"
 
   # EC2インスタンス2作成
   EC2Instance2:
@@ -227,14 +229,14 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           files:
-            "/tmp/index.html":
+            /tmp/index.html:
               content: |
                 <!DOCTYPE html>
                 <html>
                 <head><title>My Static Website</title></head>
                 <body><h1>Welcome to My Static Website!</h1></body>
                 </html>
-              mode: "000644"
+              mode: 000644
           commands:
             01_upload_file:
               command: !Sub "aws s3 cp /tmp/index.html s3://${StaticWebsiteBucket}/index.html"
@@ -248,7 +250,7 @@ Resources:
         - !Ref MySecurityGroupEC22
       Tags:
         - Key: Name
-          Value: EC2Instance2      
+          Value: !Sub "${NameBase}-EC2Instance2" 
       ########## ここからがユーザーデータ ##########
       UserData:
         Fn::Base64: !Sub |  
@@ -357,8 +359,8 @@ Resources:
       Targets:
         - Id: !Ref EC2Instance2
       HealthCheckProtocol: HTTP
-      HealthCheckPort: "80"
-      HealthCheckPath: "/"
+      HealthCheckPort: 80
+      HealthCheckPath: /
       HealthCheckIntervalSeconds: 30
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
@@ -376,11 +378,11 @@ Resources:
         - !Ref MySecurityGroupELB
       Scheme: internal
       LoadBalancerAttributes:
-        - Key: "deletion_protection.enabled"
-          Value: "false"
+        - Key: deletion_protection.enabled
+          Value: false
       Tags:
         - Key: Name
-          Value: MyALB
+          Value: !Sub "${NameBase}-MyALB"
 
   # ALBリスナー（HTTP:80）
   ALBListener:
@@ -394,18 +396,18 @@ Resources:
           TargetGroupArn: !Ref TargetGroup
 
   InstanceRole:
-    Type: "AWS::IAM::Role"
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
-          - Effect: "Allow"
+          - Effect: Allow
             Principal:
-              Service: "ec2.amazonaws.com"
-            Action: "sts:AssumeRole"
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
 
   # EC2S3AccessRole:
   #   Type: AWS::IAM::Role
@@ -430,7 +432,7 @@ Resources:
   #               Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
 
   SSMInstanceProfile:
-    Type: "AWS::IAM::InstanceProfile"
+    Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
         - !Ref InstanceRole
@@ -439,34 +441,34 @@ Resources:
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: "Subnet group for RDS"
+      DBSubnetGroupDescription: Subnet group for RDS
       SubnetIds:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
       Tags:
         - Key: Name
-          Value: MyDBSubnetGroup
+          Value: !Sub ${NameBase}-DBSubnetGroup
   # RDS インスタンス
   MyRDSInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: "my-rds-instance"
-      Engine: "mysql"
-      EngineVersion: "8.0"
-      DBInstanceClass: "db.t4g.micro"
+      DBInstanceIdentifier: my-rds-instance
+      Engine: mysql
+      EngineVersion: 8.0.40
+      DBInstanceClass: db.t4g.micro
       AllocatedStorage: 20
-      StorageType: "gp2"
+      StorageType: gp2
       MultiAZ: false  # シングルAZ構成
       PubliclyAccessible: false
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !Ref MySecurityGroupRDS
-      MasterUsername: "admin"
-      MasterUserPassword: "Password123!"  # Secrets Manager推奨
+      MasterUsername: admin
+      MasterUserPassword: !Ref MyRDSMasterPassword  # Secrets Manager推奨
       BackupRetentionPeriod: 0
       Tags:
         - Key: Name
-          Value: MyRDSInstance
+          Value: !Sub ${NameBase}-MyRDSInstance
   # バケットポリシー（公開アクセスを許可）
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -475,8 +477,8 @@ Resources:
       PolicyDocument:
         Statement:
           - Effect: Allow
-            Principal: "*"
-            Action: "s3:GetObject"
+            Principal: *
+            Action: s3:GetObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
   # # S3 バケットのデフォルトオブジェクト（index.html）
   # WebsiteIndexObject:
@@ -497,7 +499,7 @@ Resources:
   #       </html>
 Outputs:
   WebsiteURL:
-    Description: "URL of the static website"
+    Description: URL of the static website
     Value: !Sub "http://${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
   # LoadBalancers:
   #   - AvailabilityZones:
