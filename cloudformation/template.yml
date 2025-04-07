@@ -7,10 +7,6 @@ Parameters:
     Description: this is base name.
     Type: String
     Default: RaiseTekkun
-  MyRDSMasterPassword:
-    Type: String
-    NoEcho: true
-    Description: RDS master user password
 
 Resources:
   MyVPC:
@@ -468,7 +464,7 @@ Resources:
       VPCSecurityGroups:
         - !Ref MySecurityGroupRDS
       MasterUsername: admin
-      MasterUserPassword: !Ref MyRDSMasterPassword
+      MasterUserPassword: "{{resolve:ssm-secure:/rds/master/password:1}}"
       BackupRetentionPeriod: 0
       Tags:
         - Key: Name
