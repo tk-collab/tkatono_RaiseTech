@@ -477,7 +477,7 @@ Resources:
       PolicyDocument:
         Statement:
           - Effect: Allow
-            Principal: *
+            Principal: "*"
             Action: s3:GetObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
   # # S3 バケットのデフォルトオブジェクト（index.html）
