@@ -7,6 +7,11 @@ Parameters:
     Description: this is base name.
     Type: String
     Default: RaiseTekkun
+    
+  MyIP:
+    Description: IP address allowed to access EC2
+    Type: String
+    Default: 119.171.47.244/32
 
 Resources:
   MyVPC:
@@ -153,7 +158,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref MyIP
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -172,7 +177,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref MyIP
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -258,97 +263,7 @@ Resources:
           yum update -y
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Instance2 --region ${AWS::Region}
-      # UserData:
-      #   Fn::Base64: |
-      #     #!/bin/bash -e
-      #     exec > /var/log/user-data.log 2>&1
-      #     sudo -u ec2-user bash << 'EOF'
-      #     cd
-      #     sudo yum install -y git
-      #     sudo yum install -y gnupg2
-      #     gpg2 --keyserver hkp://keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-      #     # command curl -sSL https://rvm.io/mpapis.asc | gpg2 --import -
-      #     # command curl -sSL https://rvm.io/pkuczynski.asc | gpg2 --import -
-      #     \curl -sSL https://get.rvm.io | bash -s stable
-      #     ls -la /home/ec2-user/.rvm
-      #     # RVMインストール（インストールされていない場合）
-      #     if [ ! -d "/home/ec2-user/.rvm" ]; then
-      #       \curl -sSL https://get.rvm.io | bash -s stable
-      #     fi
-      #     source ~/.rvm/scripts/rvm
-      #     rvm install 3.2.3
-      #     rvm use 3.2.3 --default
-      #     ruby -v
-      #     bundler -v
-      #     git clone https://github.com/yuta-ushijima/raisetech-live8-sample-app.git
-      #     cd ./raisetech-live8-sample-app
-      #     curl -fsSL https://raw.githubusercontent.com/MasatoshiMizumoto/raisetech_documents/main/aws/scripts/mysql_amazon_linux_2.sh | sh
-      #     bin/rails -v
-      #     sudo yum groupinstall "Development Tools" -y
-      #     sudo yum install gcc-c++ -y
-      #     gem install sassc -v 2.4.0
-      #     rm -f Gemfile.lock
-      #     gem install bigdecimal -v 3.1.9
-      #     gem uninstall date -y
-      #     bundle clean --force
-      #     gem install date -v '3.4.1' --no-document
-      #     bundle install --verbose
-      #     rails -v
-      #     curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
-      #     source ~/.bashrc
-      #     nvm install --lts
-      #     nvm install 17.9.1
-      #     nvm use 17.9.1
-      #     nvm -v
-      #     npm install -g yarn
-      #     yarn -v
-      #     nvm alias default 17.9.1
-      #     bundle config set force_ruby_platform true
-      #     bundle install --gemfile /home/ec2-user/raisetech-live8-sample-app/Gemfile
-      #     ls -l config/database.yml*
-      #     cp config/database.yml.sample config/database.yml
-      #     ls -l /tmp/mysql.sock
-      #     sudo systemctl restart mysqld
-      #     cd ./config
-      #     DB_CONFIG="config/database.yml"
-      #     sed -i 's/^\(\s*socket:\) /tmp/mysql.sock/\1 /var/lib/mysql/mysql.sock/' $DB_CONFIG
-      #     sed -i 's/^\(\s*password:\)/\1 zccCe-b3GywJ/' $DB_CONFIG
-      #     cat config/database.yml
-      #     yarn install
-      #     sed -i 's/port ENV.fetch("PORT") { 3000 }/# port ENV.fetch("PORT") { 3000 }/' config/puma.rb
-      #     cat config/puma.rb
-      #     pkill -f puma
-      #     bundle exec puma -C config/puma.rb
-      #     netstat -anp | grep puma
-      #     sudo yum update -y
-      #     sudo amazon-linux-extras enable nginx1
-      #     sudo yum install -y nginx
-      #     sudo systemctl start nginx
-      #     sudo systemctl enable nginx
-      #     sudo systemctl status nginx
-      #     sed -i 's/proxy_pass http://unix:/var/run/puma.sock;/proxy_pass http://unix:/home/ec2-user/raisetech-live8-sample-app/tmp/sockets/puma.sock;/' /etc/nginx/conf.d/app.conf
-      #     sed -i 's/root /path/to/your/app/public;/root /home/ec2-user/raisetech-live8-sample-app/public;/' /etc/nginx/conf.d/app.conf
-      #     cat /etc/nginx/conf.d/app.conf
-      #     sudo nginx -t
-      #     sudo systemctl restart nginx
-      #     sed -i 's#WorkingDirectory=/path/to/your/app#WorkingDirectory=/home/ec2-user/raisetech-live8-sample-app#' /etc/nginx/conf.d/app.conf
-      #     sed -i 's#ExecStart=.*#ExecStart=/home/ec2-user/.rbenv/shims/bundle exec puma -C config/puma.rb#' /etc/nginx/conf.d/app.conf
-      #     sed -i 's#StandardOutput=journal#StandardOutput=file:/home/ec2-user/raisetech-live8-sample-app/log/puma.log#' /etc/nginx/conf.d/app.conf
-      #     sed -i 's#StandardError=journal#StandardError=file:/home/ec2-user/raisetech-live8-sample-app/log/puma.err.log#' /etc/nginx/conf.d/app.conf
-      #     cat /etc/nginx/conf.d/app.conf
-      #     chmod -R 777 ./tmp/sockets
-      #     chmod -R 777 ./tmp/pids
-      #     chmod -R 777 ./tmp
-      #     chmod -R 777 /ec2-user/raisetech-live8-sample-app
-      #     chmod -R 777 /ec2-user
-      #     sudo systemctl restart puma
-      #     sed -i 's#StandardError=journal#StandardError=file:/home/ec2-user/raisetech-live8-sample-app/log/puma.err.log#' /etc/nginx/conf.d/app.conf
-      #     echo "config.hosts << 'raisetech-alb-lecture05-2-1569213835.ap-northeast-1.elb.amazonaws.com'" | sudo tee -a config/environments/production.rb
-      #     echo "config.hosts << 'raisetech-alb-lecture05-2-1569213835.ap-northeast-1.elb.amazonaws.com'" | sudo tee -a /home/ec2-user/raisetech-live8-sample-app/config/environments/development.rb
-      #     /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Instance2 --region ${AWS::Region}
-      #     sudo systemctl enable amazon-ssm-agent
-      #     sudo systemctl start amazon-ssm-agent
-      #     EOF
+     
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
