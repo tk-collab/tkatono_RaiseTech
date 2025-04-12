@@ -24,6 +24,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${NameBase}-MyVPC"
+          
   # パブリックサブネット作成
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -46,6 +47,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${NameBase}-PublicSubnet2"
+          
   # プライベートサブネット作成
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -181,7 +183,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          SourceSecurityGroupId: !Ref MySecurityGroupELB  # EC2からのアクセスのみ許可
+          SourceSecurityGroupId: !Ref MySecurityGroupELB
 
 # セキュリティグループ3作成（ELB用）
   MySecurityGroupELB:
@@ -218,8 +220,8 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      KeyName: raiseTech_keypair_lecture05  # 既存のキーペア名を指定
-      ImageId: ami-072298436ce5cb0c4 # 最新のAmazon Linux 2023 AMIのIDを指定してください
+      KeyName: raiseTech_keypair_lecture05
+      ImageId: ami-072298436ce5cb0c4
       SubnetId: !Ref PublicSubnet1
       SecurityGroupIds:
         - !Ref MySecurityGroupEC21
@@ -247,8 +249,8 @@ Resources:
               command: !Sub "aws s3 cp /tmp/index.html s3://${StaticWebsiteBucket}/index.html"
     Properties:
       InstanceType: t2.micro
-      KeyName: raiseTech_keypair_lecture05  # 既存のキーペア名を指定
-      ImageId: ami-06d57dd2fd67ed507 # 最新のAmazon Linux 2 AMIのIDを指定してください
+      KeyName: raiseTech_keypair_lecture05
+      ImageId: ami-06d57dd2fd67ed507
       SubnetId: !Ref PublicSubnet1
       IamInstanceProfile: !Ref SSMInstanceProfile
       SecurityGroupIds:
@@ -324,28 +326,6 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
 
-  # EC2S3AccessRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: ec2.amazonaws.com
-  #           Action: sts:AssumeRole
-  #     Path: /
-  #     Policies:
-  #       - PolicyName: EC2S3UploadPolicy
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Effect: Allow
-  #               Action:
-  #                 - s3:PutObject
-  #                 - s3:GetObject
-  #               Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
-
   SSMInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -363,6 +343,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${NameBase}-DBSubnetGroup
+          
   # RDS インスタンス
   MyRDSInstance:
     Type: AWS::RDS::DBInstance
@@ -384,6 +365,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${NameBase}-MyRDSInstance
+          
   # バケットポリシー（公開アクセスを許可）
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -395,46 +377,8 @@ Resources:
             Principal: "*"
             Action: s3:GetObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
-  # # S3 バケットのデフォルトオブジェクト（index.html）
-  # WebsiteIndexObject:
-  #   Type: AWS::S3::BucketObject
-  #   Properties:
-  #     Bucket: !Ref StaticWebsiteBucket
-  #     Key: "index.html"
-  #     ContentType: "text/html"
-  #     Content: |
-  #       <!DOCTYPE html>
-  #       <html>
-  #       <head>
-  #         <title>My Static Website</title>
-  #       </head>
-  #       <body>
-  #         <h1>Welcome to My Static Website</h1>
-  #       </body>
-  #       </html>
+
 Outputs:
   WebsiteURL:
     Description: URL of the static website
     Value: !Sub "http://${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
-  # LoadBalancers:
-  #   - AvailabilityZones:
-  #       - LoadBalancerAddresses: []
-  #         SubnetId: subnet-045415b8f543dea98
-  #         ZoneName: ap-northeast-1a
-  #       - LoadBalancerAddresses: []
-  #         SubnetId: subnet-09afee4a4a333b63d
-  #         ZoneName: ap-northeast-1c
-  #     CanonicalHostedZoneId: Z14GRHDCWA56QT
-  #     CreatedTime: '2025-03-17T14:08:17.523000+00:00'
-  #     DNSName: internal-raiseTech-ALB-lecture05-731935225.ap-northeast-1.elb.amazonaws.com
-  #     EnablePrefixForIpv6SourceNat: 'off'
-  #     IpAddressType: ipv4
-  #     LoadBalancerArn: arn:aws:elasticloadbalancing:ap-northeast-1:396608767997:loadbalancer/app/raiseTech-ALB-lecture05/4a0ddeceefc72e47
-  #     LoadBalancerName: raiseTech-ALB-lecture05
-  #     Scheme: internal
-  #     SecurityGroups:
-  #       - sg-0b5983fb827f4305a
-  #     State:
-  #       Code: active
-  #     Type: application
-  #     VpcId: vpc-0e2a3efff50c242e9
