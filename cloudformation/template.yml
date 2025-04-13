@@ -1,0 +1,384 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: sample template
+
+Parameters:
+  NameBase: # ←これが名前⽤変数の論理ID
+    Description: this is base name.
+    Type: String
+    Default: RaiseTekkun
+    
+  MyIP:
+    Description: IP address allowed to access EC2
+    Type: String
+    Default: 119.171.47.244/32
+
+Resources:
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.4.0/22
+      InstanceTenancy: default
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-MyVPC"
+          
+  # パブリックサブネット作成
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.6.0/26
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-PublicSubnet1"
+          
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.7.0/26
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 1, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-PublicSubnet2"
+          
+  # プライベートサブネット作成
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.5.0/26
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-PrivateSubnet1"
+          
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.4.128/26
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [ 1, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-PrivateSubnet2"
+
+  # インターネットゲートウェイ作成
+  MyIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-MyIGW"
+
+  # VPCにインターネットゲートウェイをアタッチ
+  AttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVPC
+      InternetGatewayId: !Ref MyIGW
+
+  # パブリックサブネット（AZ1）用のルートテーブル作成
+  PublicRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-PublicRouteTable1"
+
+  # パブリックサブネット（AZ1）用のインターネットゲートウェイへのルート作成
+  PublicRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyIGW
+
+  # パブリックサブネット（AZ1）にルートテーブルを関連付け
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable1
+
+  # パブリックサブネット（AZ2）用のルートテーブル作成
+  PublicRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-PublicRouteTable2"
+
+  # パブリックサブネット（AZ2）用のインターネットゲートウェイへのルート作成
+  PublicRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyIGW
+
+  # パブリックサブネット（AZ2）にルートテーブルを関連付け
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable2
+
+  # S3 バケット（静的ウェブサイトホスティング用）
+  StaticWebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-StaticWebsiteBucket"
+
+# セキュリティグループ1作成（EC2インスタンス用）
+  MySecurityGroupEC21:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and HTTP
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref MyIP
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+# セキュリティグループ2作成（EC2インスタンス用）
+  MySecurityGroupEC22:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Only HTTP
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref MyIP
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref MySecurityGroupELB
+
+# セキュリティグループ3作成（ELB用）
+  MySecurityGroupELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Only HTTP
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  # セキュリティグループ4作成（RDS用）
+  MySecurityGroupRDS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Only HTTP
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref MySecurityGroupEC22  # EC2からのアクセスのみ許可
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  # EC2インスタンス1作成
+  EC2Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: raiseTech_keypair_lecture05
+      ImageId: ami-072298436ce5cb0c4
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref MySecurityGroupEC21
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-EC2Instance1"
+
+  # EC2インスタンス2作成
+  EC2Instance2:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /tmp/index.html:
+              content: |
+                <!DOCTYPE html>
+                <html>
+                <head><title>My Static Website</title></head>
+                <body><h1>Welcome to My Static Website!</h1></body>
+                </html>
+              mode: 000644
+          commands:
+            01_upload_file:
+              command: !Sub "aws s3 cp /tmp/index.html s3://${StaticWebsiteBucket}/index.html"
+    Properties:
+      InstanceType: t2.micro
+      KeyName: raiseTech_keypair_lecture05
+      ImageId: ami-06d57dd2fd67ed507
+      SubnetId: !Ref PublicSubnet1
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      SecurityGroupIds:
+        - !Ref MySecurityGroupEC22
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-EC2Instance2" 
+      ########## ここからがユーザーデータ ##########
+      UserData:
+        Fn::Base64: !Sub |  
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Instance2 --region ${AWS::Region}
+     
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref MyVPC
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      Targets:
+        - Id: !Ref EC2Instance2
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: 80
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+
+  # ALB作成
+  MyALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: MyALB
+      Subnets:
+        - !Ref PublicSubnet1 
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref MySecurityGroupELB
+      Scheme: internal
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NameBase}-MyALB"
+
+  # ALBリスナー（HTTP:80）
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref MyALB
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  SSMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+
+  # DB サブネットグループ
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub ${NameBase}-DBSubnetGroup
+          
+  # RDS インスタンス
+  MyRDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: my-rds-instance
+      Engine: mysql
+      EngineVersion: 8.0.40
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: 20
+      StorageType: gp2
+      MultiAZ: false  # シングルAZ構成
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref MySecurityGroupRDS
+      MasterUsername: admin
+      MasterUserPassword: "{{resolve:ssm-secure:/rds/master/password:1}}"
+      BackupRetentionPeriod: 0
+      Tags:
+        - Key: Name
+          Value: !Sub ${NameBase}-MyRDSInstance
+          
+  # バケットポリシー（公開アクセスを許可）
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticWebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
+
+Outputs:
+  WebsiteURL:
+    Description: URL of the static website
+    Value: !Sub "http://${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
