@@ -1,65 +1,118 @@
 version: 2.1
-
 orbs:
-  aws-cloudformation: circleci/aws-cloudformation@1.0.2
-  ansible: circleci/ansible@1.0.0
-  ruby: circleci/ruby@1.1.2
+  python: circleci/python@2.0.3
+  aws-cli: circleci/aws-cli@5.3.2
+  ansible-playbook: orbss/ansible-playbook@0.0.5
+  ruby: circleci/ruby@2.5.3
 
 jobs:
-  deploy:
-    executor: aws-cloudformation/default
+  cfn-lint:
+    executor: python/default
     steps:
       - checkout
-      - aws-cloudformation/deploy:
-          stack-name: my-stack
-          template: template.yml
-          region: ap-northeast-1
-
-  run-ansible:
-    executor: ansible/default
-    steps:
-      - checkout
+      - run: pip install cfn-lint
       - run:
-          name: Set up SSH private key
+          name: run cfn-lint
           command: |
-            mkdir -p ~/.ssh
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa
+            cfn-lint -i W3002 -t cloudformation/template.yml
+
+  execute-cfn:
+    executor: aws-cli/default
+    steps:
+      - checkout
+      - aws-cli/setup:
+          aws_access_key_id: AWS_ACCESS_KEY_ID
+          aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+          region: AWS_DEFAULT_REGION
+
+      - run:
+          name: Validate CloudFormation Template
+          command: |
+            aws cloudformation validate-template \
+              --template-body file://cloudformation/template.yml
+
+      - run:
+          name: Deploy CloudFormation Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file cloudformation/template.yml \
+              --stack-name lecture13-stack \
+              --capabilities CAPABILITY_NAMED_IAM
+
+  execute-ansible:
+    executor: ansible-playbook/default
+    environment:
+      ANSIBLE_CONFIG: ansible/ansible.cfg
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:fMJBF9vXJhlQFfnoB1d7MfSPh0l39ybE2NYNqARw4nA"
+      - ansible-playbook/install:
+          version: 2.10.7
+      - aws-cli/setup:
+          aws_access_key_id: AWS_ACCESS_KEY_ID
+          aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+          region: AWS_DEFAULT_REGION
+      - run:
+          name: Set Environment Vars
+          command: |
+            set -x
+            AWS_RDS_PASSWORD=$(aws secretsmanager get-secret-value --secret-id raisetech-rds-secret --query 'SecretString' --output text | jq -r '.password')
+            AWS_RDS_ENDPOINT=$(aws cloudformation describe-stacks --stack-name lecture13-stack --query "Stacks[0].Outputs[?OutputKey=='RDSEndpoint'].OutputValue" --output text)
+            AWS_S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name lecture13-stack --query "Stacks[0].Outputs[?OutputKey=='S3BucketName'].OutputValue" --output text)
+            AWS_ALB_DNS_NAME=$(aws cloudformation describe-stacks --stack-name lecture13-stack --query "Stacks[0].Outputs[?OutputKey=='ALBDNSName'].OutputValue" --output text)
+            echo "export AWS_RDS_PASSWORD=${AWS_RDS_PASSWORD}" >> $BASH_ENV
+            echo "export AWS_RDS_ENDPOINT=${AWS_RDS_ENDPOINT}" >> $BASH_ENV
+            echo "export AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}" >> $BASH_ENV
+            echo "export AWS_ALB_DNS_NAME=${AWS_ALB_DNS_NAME}" >> $BASH_ENV
+
+      - run:
+          name: Dump BASH_ENV
+          command: cat $BASH_ENV
+
       - run:
           name: Run Ansible Playbook
           command: |
-            ansible-playbook -i ansible/inventory ansible/playbook.yml
+            ansible-playbook ansible/playbook.yml -i ansible/inventory.ini
 
-  run-serverspec:
-    executor:
-      name: ruby/default
-      tag: '3.1.2'
+  execute-serverspec:
+    executor: ruby/default
     steps:
       - checkout
+      - ruby/install:
+          version: 3.2.3
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:fMJBF9vXJhlQFfnoB1d7MfSPh0l39ybE2NYNqARw4nA"
       - run:
-          name: Set up SSH private key
+          name: Set ~/.ssh/config
           command: |
             mkdir -p ~/.ssh
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa
+            echo "Host target" >> ~/.ssh/config
+            echo "HostName 54.178.150.33" >> ~/.ssh/config
+            echo "User ec2-user" >> ~/.ssh/config
       - run:
-          name: Install dependencies
+          name: Setup Serverspec
           command: |
-            gem install bundler
+            cd serverspec
             bundle install
       - run:
-          name: Run ServerSpec tests
+          name: Execute Serverspec
           command: |
+            cd serverspec
             bundle exec rake spec
 
 workflows:
-  version: 2
-  deploy-and-verify:
+  lecture13-provisioning:
     jobs:
-      - deploy
-      - run-ansible:
+      - cfn-lint
+      - execute-cfn:
           requires:
-            - deploy
-      - run-serverspec:
+            - cfn-lint
+      - execute-ansible:
           requires:
-            - run-ansible
+            - execute-cfn
+      - execute-serverspec:
+          requires:
+            - execute-ansible
