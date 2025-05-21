@@ -1,0 +1,98 @@
+---
+# tasks file for roles/app_deploy
+# - name: copy of storage.yml
+#   template:
+#     src: storage.yml.j2
+#     dest: "{{ app_dir }}/config/storage.yml"
+
+# - name: remove resize and upload operation in index.html.slim
+#   template:
+#     src: index.html.slim.j2
+#     dest: "{{ app_dir }}/app/views/fruits/index.html.slim"
+
+# - name: remove resize and upload operation in show.html.slim
+#   template:
+#     src: show.html.slim.j2
+#     dest: "{{ app_dir }}/app/views/fruits/show.html.slim"
+
+# - name: purge operation in fruit.rb
+#   template:
+#     src: fruit.rb.j2
+#     dest: "{{ app_dir }}/app/models/fruit.rb"
+
+# - name: Create tmp subdirectories
+#   ansible.builtin.file:
+#     path: "/home/ec2-user/raisetech-live8-sample-app/tmp/{{ item }}"
+#     state: directory
+#     mode: '0755'
+#     owner: ec2-user
+#     group: ec2-user
+#   loop:
+#     - sockets
+#     - pids
+
+- name: Ensure execute permission (+x,+w) on each directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0775'
+    owner: ec2-user
+    group: ec2-user
+
+  loop:
+    - /home/ec2-user
+    - /home/ec2-user/raisetech-live8-sample-app
+    - /home/ec2-user/raisetech-live8-sample-app/tmp
+    - /home/ec2-user/raisetech-live8-sample-app/tmp/sockets
+    - /home/ec2-user/raisetech-live8-sample-app/tmp/pids
+
+# - name: Reload systemd to pick up puma.service
+#   command: systemctl daemon-reload
+#   become: yes
+#   args:
+#     executable: /bin/bash
+
+- name: Enable and start Puma service
+  systemd:
+    name: puma
+    enabled: yes
+    state: restarted
+  become: yes
+
+- name: development.rb copy 
+  become: yes
+  template:
+    src: development.rb.j2
+    dest: "{{ app_dir }}/config/environments/development.rb"
+
+# - name: bin/cloud9_dev
+#   shell: |
+#     source /home/ec2-user/.rvm/scripts/rvm
+#     yarn install
+#     bin/cloud9_dev
+#   args:
+#     executable: /bin/bash
+#     chdir: "{{ app_dir }}"
+
+- name: Run yarn build
+  ansible.builtin.command: yarn build
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Remove application.scss if it exists
+  ansible.builtin.file:
+    path: /home/ec2-user/raisetech-live8-sample-app/app/assets/stylesheets/application.scss
+    state: absent
+
+- name: Run rails assets:clobber
+  ansible.builtin.command: bash -lc 'bundle exec rails assets:clobber'
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Run rails assets:precompile
+  ansible.builtin.command: bash -lc 'bundle exec rails assets:precompile'
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+
+

@@ -1,0 +1,245 @@
+---
+# tasks file for roles/mysql
+- name: Check if swap file exists
+  stat:
+    path: /swapfile
+  register: swapfile_stat
+  become: yes
+
+- name: Create swap file
+  command: fallocate -l 2G /swapfile
+  when: swapfile_stat.stat.exists == false
+  become: yes
+
+- name: Set permissions on swap file
+  file:
+    path: /swapfile
+    owner: root
+    group: root
+    mode: '0600'
+  when: swapfile_stat.stat.exists == false
+  become: yes
+
+- name: Make swap
+  command: mkswap /swapfile
+  when: swapfile_stat.stat.exists == false
+  become: yes
+
+- name: Enable swap
+  command: swapon /swapfile
+  when: swapfile_stat.stat.exists == false
+  become: yes
+
+- name: Add swapfile to fstab
+  lineinfile:
+    path: /etc/fstab
+    line: '/swapfile none swap sw 0 0'
+    create: yes
+  when: swapfile_stat.stat.exists == false
+  become: yes
+
+- name: Install Mysql
+  shell: curl -fsSL https://raw.githubusercontent.com/MasatoshiMizumoto/raisetech_documents/main/aws/scripts/mysql_amazon_linux_2.sh | sh
+  args:
+    creates: /usr/bin/mysql
+
+- name: Stop MySQL if running
+  systemd:
+    name: mysqld
+    state: stopped
+  ignore_errors: yes
+  become: yes
+
+- name: Remove MySQL server and related packages
+  yum:
+    name:
+      - mysql-community-server
+      - mysql-community-client
+      - mysql-community-common
+      - mysql-community-libs
+      - mysql-community-devel
+      - mysql-community-icu-data-files
+      - mysql-community-client-plugins 
+    state: absent
+  become: yes
+
+- name: Remove MySQL data directory
+  file:
+    path: /var/lib/mysql
+    state: absent
+  become: yes
+
+- name: Clean yum cache
+  command: yum clean all
+  become: yes
+
+- name: Install MySQL 8.4.4 explicitly
+  yum:
+    name: 
+      - mysql-community-server-8.4.4
+      - mysql-community-client-8.4.4
+      - mysql-community-common-8.4.4
+      - mysql-community-libs-8.4.4
+      - mysql-community-icu-data-files-8.4.4
+      - mysql-community-client-plugins-8.4.4 
+    state: present
+    enablerepo: mysql-8.4-lts-community
+  become: yes 
+
+- name: Start and enable MySQL
+  systemd:
+    name: mysqld
+    state: started
+    enabled: yes
+  become: yes 
+
+# - name: Remove MariaDB packages
+#   ansible.builtin.yum:
+#     name:
+#       - mariadb
+#       - mariadb-server
+#       - mariadb-libs
+#       - mariadb-connect-engine
+#       - mariadb-sphinx-engine
+#       - mariadb-config 
+#     state: absent
+#   become: yes
+
+# - name: Install pip
+#   become: yes
+#   yum:
+#     name: python-pip
+#     state: present
+
+# - name: Install PyMySQL
+#   become: yes
+#   pip:
+#     name: PyMySQL
+#     state: present
+
+# - name: Install RPM-GPG-KEY-mysql
+#   become: yes
+#   rpm_key:
+#     state: present
+#     key: https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+#   ignore_errors: true
+
+# - name: Install MySQL repository
+#   become: yes
+#   yum:
+#     name: "https://repo.mysql.com//mysql84-community-release-el7-1.noarch.rpm"
+#     state: present
+
+# - name: Install MySQL packages
+#   become: yes
+#   yum:
+#     name:
+#       - mysql-community-devel
+#       - mysql-community-server
+#       - mysql-community-client
+#     state: present
+
+# - name: Uninstall mysql2 gem in RVM environment
+#   shell: |
+#     source /home/ec2-user/.rvm/scripts/rvm
+#     gem uninstall -x mysql2 -a
+#   args:
+#     executable: /bin/bash
+
+# - name: Install mysql2 gem with mysql_config in RVM environment
+#   shell: |
+#     source /home/ec2-user/.rvm/scripts/rvm
+#     gem install mysql2 -- --with-mysql-config=/usr/bin/mysql_config
+#   args:
+#     executable: /bin/bash
+
+# - name: Start MySQL service
+#   ansible.builtin.systemd:
+#     name: mysqld
+#     state: started
+#   become: yes
+
+- name: Get MySQL temporary password
+  shell: "grep 'temporary password' /var/log/mysqld.log | tail -1 | awk '{print $NF}'"
+  register: mysql_temp_password
+  become: yes
+  changed_when: false
+
+- name: Debug MySQL temp password
+  debug:
+    msg: "{{ mysql_temp_password.stdout }}"
+
+- name: Set MySQL root password using mysqladmin
+  shell: >
+    mysqladmin -u root -p'{{ mysql_temp_password.stdout }}' password '{{ mysql_root_new_password }}'
+  environment:
+    MYSQL_PWD: "{{ mysql_temp_password.stdout }}"
+  args:
+    executable: /bin/bash
+  register: set_pw_result
+  ignore_errors: yes
+
+- debug:
+    msg: "{{ set_pw_result }}"
+
+# - name: Get MySQL temporary password
+#   shell: "grep 'temporary password' /var/log/mysqld.log | tail -1 | awk '{print $NF}'"
+#   register: mysql_temp_password
+#   changed_when: false
+#   environment:
+#     DB_USERNAME: admin
+#     DB_PASSWORD: esp*hkMrC7?D
+
+# - name: Reset MySQL root password using mysqladmin
+#   shell: >
+#     mysqladmin -u root -p'{{ mysql_temp_password.stdout }}' password '{{ mysql_root_new_password }}'
+
+# - name: Change MySQL root password
+#   shell: >
+#     mysql -u root -p'{{ mysql_temp_password.stdout }}' --connect-expired-password
+#     -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_new_password }}';"
+
+# - name: Use mysql_native_password
+#   community.mysql.mysql_user:
+#     name: admin
+#     host: "%"
+#     password: "{{ aws_db_pw }}"
+#     login_user: admin
+#     login_password: "{{ aws_db_pw }}"
+#     login_host: "{{ aws_db_host }}"
+#     priv: "*.*:ALL,GRANT"
+#     state: present
+#   ignore_errors: true
+
+# - name: Enable mysql_native_password plugin
+#   community.mysql.mysql_query:
+#     login_user: root
+#     login_password: "{{ aws_db_rootpw }}"
+#     login_host: "localhost"
+#     query: "INSTALL PLUGIN mysql_native_password SONAME 'auth_native_password.so';"
+#   ignore_errors: true  # すでに入っていればスキップ
+
+# - name: Load mysql_native_password
+#   template:
+#     src: my.cnf.j2
+#     dest: "/etc/my.cnf"
+#   become: yes
+
+# - name: Use mysql_native_password
+#   community.mysql.mysql_user:
+#     name: admin
+#     host: "%"
+#     password: "{{ aws_db_pw }}"
+#     login_user: root
+#     login_password: "{{ aws_db_rootpw }}"
+#     login_host: "localhost"
+#     priv: "*.*:ALL,GRANT"
+#     state: present
+#     plugin: mysql_native_password
+
+# - name: Change socket path in database.yml
+#   replace:
+#     path: /home/ec2-user/raisetech-live8-sample-app/config/database.yml
+#     regexp: 'socket: /tmp/mysql.sock'
+#     replace: 'socket: /var/lib/mysql/mysql.sock'
+

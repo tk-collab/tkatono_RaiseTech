@@ -1,17 +1,65 @@
 version: 2.1
+
 orbs:
-  python: circleci/python@2.0.3
+  aws-cloudformation: circleci/aws-cloudformation@1.0.2
+  ansible: circleci/ansible@1.0.0
+  ruby: circleci/ruby@1.1.2
+
 jobs:
-  cfn-lint:
-    executor: python/default
+  deploy:
+    executor: aws-cloudformation/default
     steps:
       - checkout
-      - run: pip install cfn-lint
+      - aws-cloudformation/deploy:
+          stack-name: my-stack
+          template: template.yml
+          region: ap-northeast-1
+
+  run-ansible:
+    executor: ansible/default
+    steps:
+      - checkout
       - run:
-          name: run cfn-lint
+          name: Set up SSH private key
           command: |
-            cfn-lint -i W3002 -t cloudformation/*.yml
+            mkdir -p ~/.ssh
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+      - run:
+          name: Run Ansible Playbook
+          command: |
+            ansible-playbook -i ansible/inventory ansible/playbook.yml
+
+  run-serverspec:
+    executor:
+      name: ruby/default
+      tag: '3.1.2'
+    steps:
+      - checkout
+      - run:
+          name: Set up SSH private key
+          command: |
+            mkdir -p ~/.ssh
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+      - run:
+          name: Install dependencies
+          command: |
+            gem install bundler
+            bundle install
+      - run:
+          name: Run ServerSpec tests
+          command: |
+            bundle exec rake spec
+
 workflows:
-  raisetech:
+  version: 2
+  deploy-and-verify:
     jobs:
-      - cfn-lint
+      - deploy
+      - run-ansible:
+          requires:
+            - deploy
+      - run-serverspec:
+          requires:
+            - run-ansible

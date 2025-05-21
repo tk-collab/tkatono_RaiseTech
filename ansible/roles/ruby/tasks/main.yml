@@ -1,0 +1,23 @@
+---
+# tasks file for roles/ruby
+# - name: Install Ruby using RVM
+#   shell: |
+#     bash -lc '
+#     source /home/ec2-user/.rvm/scripts/rvm && rvm install {{ ruby_version }}
+#     rvm use {{ ruby_version }} --default
+#     '
+
+- name: Run ruby -v
+  shell: bash -lc 'ruby -v'
+  register: ruby_version
+
+- name: Show Ruby version
+  debug:
+    var: ruby_version.stdout
+
+- name: Clone Rails app repository
+  git:
+    repo: 'https://github.com/yuta-ushijima/raisetech-live8-sample-app.git'
+    dest: /home/ec2-user/raisetech-live8-sample-app
+    version: main  # ← ブランチ指定（例：main や master）
+    force: yes     # ← 既存ディレクトリがあっても強制的に上書き

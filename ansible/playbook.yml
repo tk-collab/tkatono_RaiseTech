@@ -1,0 +1,21 @@
+- name: Setup Rails app environment
+  hosts: all
+
+  vars:
+    ruby_version: "3.2.3"  # インストールするRubyバージョン
+    node_version: "17.9.1"
+    app_dir: /home/ec2-user/raisetech-live8-sample-app
+    mysql_root_new_password : "NewPassword123!"
+    ansible_user: ec2-user
+#    aws_db_host : "18.179.22.8"
+ 
+  roles:
+    - git
+    - rbenv
+    - ruby
+   # - rails
+    - mysql
+    - nodejs
+    - nginx
+    - puma
+    - app_deploy

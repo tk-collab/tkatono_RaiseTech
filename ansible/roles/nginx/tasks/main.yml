@@ -1,0 +1,59 @@
+---
+# tasks file for roles/nginx
+- name: Run yarn install in the app directory
+  ansible.builtin.shell: bash -lc 'yarn install'
+  args:
+    chdir: "{{ app_dir }}"
+
+- name: Change port setting to unixsocket in puma.rb 
+  become: yes
+  template:
+    src: puma.rb.j2
+    dest: "{{ app_dir }}/config/puma.rb"
+
+- name: Add puma.service.sample
+  become: yes
+  template:
+    src: puma.service.sample.j2
+    dest: /etc/systemd/system/puma.service
+
+- name: Start Puma service
+  ansible.builtin.systemd:
+    name: puma
+    state: started
+    enabled: yes  # 自動起動させたい場合
+  become: yes
+
+- name: Enable Nginx 1 on Amazon Linux 2
+  command: amazon-linux-extras enable nginx1
+  become: yes
+
+- name: Install Nginx
+  yum:
+    name: nginx
+    state: present
+  become: yes
+
+- name: Ensure Nginx is started and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  become: yes
+
+- name: nginx the general config of copy 
+  become: yes
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+
+- name: Validate nginx config
+  become: yes
+  command: nginx -t
+
+- name: Restart nginx if config is valid
+  become: yes
+  service:
+    name: nginx
+    state: restarted
+

@@ -1,0 +1,15 @@
+class Fruit < ApplicationRecord
+  include RankedModel
+  ranks :row_order
+
+  has_one_attached :image
+
+  before_destroy :purge_image
+
+  private
+
+  def purge_image
+    image.purge
+  end
+end
+

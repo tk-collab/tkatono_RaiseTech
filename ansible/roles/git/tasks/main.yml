@@ -1,0 +1,54 @@
+---
+# tasks file for git
+# - name: Update all packages
+#   yum:
+#     name: '*'
+#     state: latest
+#   retries: 3  # 失敗時に再試行
+#   delay: 10  # 10秒間隔で再試行
+#   register: result
+#   until: result.failed == false  # 成功するまで再試行
+
+# - name: install tools
+#   become: yes
+#   yum:
+#     name:
+#       - mysql-devel
+#       - gcc-c++
+#       - openssl-devel
+#       - libyaml-devel
+#       - readline
+#       - readline-devel
+#       - zlib
+#       - zlib-devel
+#       - libffi-devel
+#       - libxml2 
+#       - libxslt 
+#       - libxml2-devel 
+#       - libxslt-devel 
+#       - sqlite-devel
+#       - ImageMagick
+#       - ImageMagick-devel
+#     state: present
+
+- name: Install packages for Ruby build
+  yum:
+    name:
+      - gcc
+      - make
+      - openssl-devel
+      - readline-devel
+      - zlib-devel
+      - bzip2
+      - bzip2-devel
+      - libffi-devel
+      - libyaml-devel
+    state: present
+  become: yes
+
+- name: Install Git
+  yum:
+    name: git
+    state: present
+  become: yes
+
