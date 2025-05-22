@@ -151,23 +151,23 @@ Resources:
           Value: !Sub "${NameBase}-StaticWebsiteBucket"
 
 # セキュリティグループ1作成（EC2インスタンス用）
-  MySecurityGroupEC21:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow SSH and HTTP
-      VpcId: !Ref MyVPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: !Ref MyIP
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
+  # MySecurityGroupEC21:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: Allow SSH and HTTP
+  #     VpcId: !Ref MyVPC
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: !Ref MyIP
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  #     SecurityGroupEgress:
+  #       - IpProtocol: -1
+  #         CidrIp: 0.0.0.0/0
 
 # セキュリティグループ2作成（EC2インスタンス用）
   MySecurityGroupEC22:
@@ -176,10 +176,10 @@ Resources:
       GroupDescription: Allow Only HTTP
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: !Ref MyIP
+        # - IpProtocol: tcp
+        #   FromPort: 22
+        #   ToPort: 22
+        #   CidrIp: !Ref MyIP
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -216,18 +216,18 @@ Resources:
           CidrIp: 0.0.0.0/0
 
   # EC2インスタンス1作成
-  EC2Instance1:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t2.micro
-      KeyName: raiseTech_keypair_lecture05
-      ImageId: ami-072298436ce5cb0c4
-      SubnetId: !Ref PublicSubnet1
-      SecurityGroupIds:
-        - !Ref MySecurityGroupEC21
-      Tags:
-        - Key: Name
-          Value: !Sub "${NameBase}-EC2Instance1"
+  # EC2Instance1:
+  #   Type: AWS::EC2::Instance
+  #   Properties:
+  #     InstanceType: t2.micro
+  #     KeyName: raiseTech_keypair_lecture05
+  #     ImageId: ami-072298436ce5cb0c4
+  #     SubnetId: !Ref PublicSubnet1
+  #     SecurityGroupIds:
+  #       - !Ref MySecurityGroupEC21
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub "${NameBase}-EC2Instance1"
 
   # EC2インスタンス2作成
   EC2Instance2:
@@ -293,7 +293,7 @@ Resources:
         - !Ref PublicSubnet2
       SecurityGroups:
         - !Ref MySecurityGroupELB
-      Scheme: internal
+      Scheme: internet-facing
       LoadBalancerAttributes:
         - Key: deletion_protection.enabled
           Value: false

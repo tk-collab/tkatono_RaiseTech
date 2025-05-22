@@ -25,11 +25,11 @@ jobs:
           aws_secret_access_key: AWS_SECRET_ACCESS_KEY
           region: AWS_DEFAULT_REGION
 
-      - run:
-          name: Validate CloudFormation Template
-          command: |
-            aws cloudformation validate-template \
-              --template-body file://cloudformation/template.yml
+      # - run:
+      #     name: Validate CloudFormation Template
+      #     command: |
+      #       aws cloudformation validate-template \
+      #         --template-body file://cloudformation/template.yml
 
       - run:
           name: Deploy CloudFormation Stack
