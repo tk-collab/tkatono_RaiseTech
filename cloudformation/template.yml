@@ -8,10 +8,10 @@ Parameters:
     Type: String
     Default: RaiseTekkun
     
-  MyIP:
-    Description: IP address allowed to access EC2
-    Type: String
-    Default: 119.171.47.244/32
+  # MyIP:
+  #   Description: IP address allowed to access EC2
+  #   Type: String
+  #   Default: 119.171.47.244/32
 
 Resources:
   MyVPC:
