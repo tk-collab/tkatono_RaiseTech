@@ -249,7 +249,7 @@ Resources:
               command: !Sub "aws s3 cp /tmp/index.html s3://${StaticWebsiteBucket}/index.html"
     Properties:
       InstanceType: t2.micro
-      KeyName: raiseTech_keypair_lecture05
+      KeyName: MyKeyName
       ImageId: ami-06d57dd2fd67ed507
       SubnetId: !Ref PublicSubnet1
       IamInstanceProfile: !Ref SSMInstanceProfile
@@ -378,6 +378,10 @@ Resources:
             Action: s3:GetObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
 
+  EC2PublicIP:
+    Description: EC2 Public IP
+    Value: !GetAtt MyEC2Instance.PublicIp
+    
 Outputs:
   WebsiteURL:
     Description: URL of the static website
