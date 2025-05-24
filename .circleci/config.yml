@@ -28,11 +28,7 @@ jobs:
       - run:
           name: Deploy CloudFormation Stack
           command: |
-            aws cloudformation deploy \
-              --template-file cloudformation/template.yml \
-              --stack-name lecture13-stack \
-              --capabilities CAPABILITY_NAMED_IAM \
-              --parameter-overrides MyKeyName=$SSH_PRIVATE_KEY
+            aws cloudformation deploy --template-file cloudformation/template.yml --stack-name lecture13-stack --capabilities CAPABILITY_NAMED_IAM --parameter-overrides MyKeyName=$SSH_PRIVATE_KEY
 
   execute-ansible:
     executor: ansible-playbook/default
