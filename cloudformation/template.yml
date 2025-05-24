@@ -378,11 +378,11 @@ Resources:
             Action: s3:GetObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
 
-  EC2PublicIP:
-    Description: EC2 Public IP
-    Value: !GetAtt MyEC2Instance.PublicIp
-    
 Outputs:
   WebsiteURL:
     Description: URL of the static website
     Value: !Sub "http://${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
+
+  EC2PublicIP:
+    Description: EC2 Public IP
+    Value: !GetAtt MyEC2Instance.PublicIp
