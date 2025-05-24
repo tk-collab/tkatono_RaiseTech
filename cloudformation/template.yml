@@ -249,7 +249,7 @@ Resources:
               command: !Sub "aws s3 cp /tmp/index.html s3://${StaticWebsiteBucket}/index.html"
     Properties:
       InstanceType: t2.micro
-      KeyName: MyKeyName
+      KeyName: raiseTech_keypair_lecture05
       ImageId: ami-06d57dd2fd67ed507
       SubnetId: !Ref PublicSubnet1
       IamInstanceProfile: !Ref SSMInstanceProfile
