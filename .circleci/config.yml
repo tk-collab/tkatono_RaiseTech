@@ -60,11 +60,14 @@ jobs:
 #            echo "export AWS_RDS_ENDPOINT=${AWS_RDS_ENDPOINT}" >> $BASH_ENV
 #            echo "export AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}" >> $BASH_ENV
 #            echo "export AWS_ALB_DNS_NAME=${AWS_ALB_DNS_NAME}" >> $BASH_ENV
-
+      - run:
+          name: Debug EC2_PUBLIC_IP and inventory.ini
+          command: |
+            echo "EC2_PUBLIC_IP=${EC2_PUBLIC_IP}"
+            cat ansible/inventory.ini
       - run:
           name: Dump BASH_ENV
           command: cat $BASH_ENV
-
       - run:
           name: Run Ansible Playbook
           command: |
