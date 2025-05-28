@@ -23,7 +23,7 @@ tkatono_RaiseTech
 |             第 4 回             | AWS 環境の手動構築 | ・ VPC、EC2、RDS の作成<br>・ EC2 と RDS の接続                                                                              | [lecture04.md](lecture04.md) |
 |             第 5 回             |                    | ・ EC2 に手動でアプリケーションをデプロイ<br>・ データの保存先を S3 に変更<br>・ ALB による冗長化<br>・ インフラ構成図の作成 | [lecture05.md](lecture05.md) |
 |             第 6 回             |                    | ・履歴を残すことの重要性<br>・ CloudTrail イベントの確認<br>・ CloudWatch アラームの設定<br>・ AWS 料金見積の作成            | [lecture06.md](lecture06.md) |
-|             第 7 回             |                    | ・ AWS におけるセキュリティの対応策<br>・脆弱性、認証情報の流出、人為的な過負荷                                              |      [lecture07.md](lecture07.md)      |
+|             第 7 回             |                    | ・ AWS におけるセキュリティの対応策<br>・脆弱性、認証情報の流出、人為的な過負荷                                              |     -    |
 |           第 8, 9 回            |                    | ・ ライブコーディング                                                                                                        |                   -                    |
 |            第 10 回             |    IaC / 自動化    | ・ CloudFormation による インフラのコード化                                                                                  | [lecture10.md](lecture10.md) |
 |            第 11 回             |                    | ・ Serverspec の実装                                                                                                         | [lecture11.md](lecture11.md) |
