@@ -11,4 +11,4 @@ tkatono_RaiseTech
     - Automatically build the environment for the sample Rails application using Ansible
     - Performing automatic testing on the built environment using Serverspec
 
-  ※The EC2 key pair is created manually in advance and used by incorporating it into the CircleCI environment variables.
+    ※The EC2 key pair is created manually in advance and used by incorporating it into the CircleCI environment variables.
