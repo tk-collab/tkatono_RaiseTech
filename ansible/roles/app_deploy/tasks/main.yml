@@ -46,12 +46,6 @@
     - /home/ec2-user/raisetech-live8-sample-app/tmp/sockets
     - /home/ec2-user/raisetech-live8-sample-app/tmp/pids
 
-# - name: Reload systemd to pick up puma.service
-#   command: systemctl daemon-reload
-#   become: yes
-#   args:
-#     executable: /bin/bash
-
 - name: Enable and start Puma service
   systemd:
     name: puma
