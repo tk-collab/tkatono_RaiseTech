@@ -30,7 +30,6 @@
 #   loop:
 #     - sockets
 #     - pids
-
 - name: Ensure execute permission (+x,+w) on each directory
   ansible.builtin.file:
     path: "{{ item }}"
@@ -38,7 +37,6 @@
     mode: '0755'
     owner: ec2-user
     group: ec2-user
-
   loop:
     - /home/ec2-user
     - /home/ec2-user/raisetech-live8-sample-app
@@ -46,18 +44,18 @@
     - /home/ec2-user/raisetech-live8-sample-app/tmp/sockets
     - /home/ec2-user/raisetech-live8-sample-app/tmp/pids
 
+- name: development.rb copy 
+  become: yes
+  template:
+    src: development.rb.j2
+    dest: "{{ app_dir }}/config/environments/development.rb"
+
 - name: Enable and start Puma service
   systemd:
     name: puma
     enabled: yes
     state: restarted
   become: yes
-
-- name: development.rb copy 
-  become: yes
-  template:
-    src: development.rb.j2
-    dest: "{{ app_dir }}/config/environments/development.rb"
 
 # - name: bin/cloud9_dev
 #   shell: |

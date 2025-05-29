@@ -71,10 +71,6 @@ jobs:
           name: Run Ansible Playbook
           command: |
             ansible-playbook ansible/playbook.yml -i ansible/inventory.ini
-      - run:
-          name: Check development.rb content
-          command: |
-            cat /home/ec2-user/raisetech-live8-sample-app/config/environments/development.rb
 
   execute-serverspec:
     executor: ruby/default
