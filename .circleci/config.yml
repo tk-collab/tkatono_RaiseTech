@@ -72,6 +72,24 @@ jobs:
           name: Run Ansible Playbook
           command: |
             ansible-playbook ansible/playbook.yml -i ansible/inventory.ini
+      jobs:
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Install Ansible
+          command: |
+            sudo apt update && sudo apt install -y ansible
+      - run:
+          name: Run Ansible playbook
+          command: |
+            ansible-playbook -i inventory.ini playbook.yml
+      - run:
+          name: Check development.rb content
+          command: |
+            cat /home/ec2-user/raisetech-live8-sample-app/config/environments/development.rb
 
   execute-serverspec:
     executor: ruby/default
