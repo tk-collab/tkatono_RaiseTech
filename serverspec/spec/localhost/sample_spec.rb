@@ -30,7 +30,7 @@ end
 
 describe command('yarn --version') do
     let(:disable_sudo) { true }
-    its(:stdout) { should match /^1\.22\.19/ }
+    its(:stdout) { should match /^1\.22\.22/ }
 end
 
 describe command('/home/ec2-user/.rbenv/shims/ruby -v') do
