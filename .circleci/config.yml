@@ -80,14 +80,24 @@ jobs:
           version: 3.2.3
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:fMJBF9vXJhlQFfnoB1d7MfSPh0l39ybE2NYNqARw4nA"
+            - "SHA256:GPLUelWsypK5BtBflkZZsGKf96FW5rzsSL1Tfv2aF28"
+      - aws-cli/setup:
+          aws_access_key_id: AWS_ACCESS_KEY_ID
+          aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+          region: AWS_DEFAULT_REGION
+      - run:
+          name: Get EC2 Public IP
+          command: |
+            EC2_PUBLIC_IP=$(aws cloudformation describe-stacks --stack-name lecture13-application-stack --query "Stacks[0].Outputs[?OutputKey=='EC2PublicIP'].OutputValue" --output text)
+            echo "export EC2_PUBLIC_IP=${EC2_PUBLIC_IP}" >> $BASH_ENV
       - run:
           name: Set ~/.ssh/config
           command: |
             mkdir -p ~/.ssh
             echo "Host target" >> ~/.ssh/config
-            echo "HostName 54.178.150.33" >> ~/.ssh/config
+            echo "HostName ${EC2_PUBLIC_IP}" >> ~/.ssh/config
             echo "User ec2-user" >> ~/.ssh/config
+            cat ~/.ssh/config
       - run:
           name: Setup Serverspec
           command: |
