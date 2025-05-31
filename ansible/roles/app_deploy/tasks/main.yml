@@ -76,6 +76,11 @@
     path: /home/ec2-user/raisetech-live8-sample-app/app/assets/stylesheets/application.scss
     state: absent
 
+- name: Force delete tmp cache
+  ansible.builtin.file:
+    path: /home/ec2-user/raisetech-live8-sample-app/tmp/cache/assets
+    state: absent
+
 - name: Run rails assets:clobber
   ansible.builtin.command: bash -lc 'bundle exec rails assets:clobber'
   args:
