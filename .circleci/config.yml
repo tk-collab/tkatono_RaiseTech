@@ -101,9 +101,9 @@ jobs:
       - run:
           name: Add rbenv init to .bashrc on EC2
           command: |
-            ssh -o StrictHostKeyChecking=no target << 'EOF'
+            ssh -o StrictHostKeyChecking=no target " 
               grep 'rbenv init' ~/.bashrc || echo 'export PATH="$HOME/.rbenv/bin:$PATH" && eval "$(rbenv init -)"' >> ~/.bashrc
-            EOF
+            "
       - run:
           name: Setup Serverspec
           command: |
