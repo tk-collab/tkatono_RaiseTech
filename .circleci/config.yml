@@ -107,6 +107,7 @@ jobs:
           name: Execute Serverspec
           command: |
             cd serverspec
+            source ~/.bash_profile
             bundle exec rake spec
 
 workflows:
