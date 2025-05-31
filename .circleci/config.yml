@@ -99,6 +99,12 @@ jobs:
             echo "User ec2-user" >> ~/.ssh/config
             cat ~/.ssh/config
       - run:
+          name: Add rbenv init to .bashrc on EC2
+          command: |
+            ssh -o StrictHostKeyChecking=no target << 'EOF'
+              grep 'rbenv init' ~/.bashrc || echo 'export PATH="$HOME/.rbenv/bin:$PATH" && eval "$(rbenv init -)"' >> ~/.bashrc
+            EOF
+      - run:
           name: Setup Serverspec
           command: |
             cd serverspec
@@ -107,7 +113,6 @@ jobs:
           name: Execute Serverspec
           command: |
             cd serverspec
-            source ~/.bash_profile
             bundle exec rake spec
 
 workflows:
