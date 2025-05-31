@@ -98,12 +98,12 @@ jobs:
             echo "HostName ${EC2_PUBLIC_IP}" >> ~/.ssh/config
             echo "User ec2-user" >> ~/.ssh/config
             cat ~/.ssh/config
-      # - run:
-      #     name: Add rbenv init to .bashrc on EC2
-      #     command: |
-      #       ssh -o StrictHostKeyChecking=no target " 
-      #         grep 'rbenv init' ~/.bashrc || echo 'export PATH="$HOME/.rbenv/bin:$PATH" && eval "$(rbenv init -)"' >> ~/.bashrc
-      #       "
+      - run:
+          name: Add rbenv init to .bashrc on EC2
+          command: |
+            ssh -o StrictHostKeyChecking=no target " 
+              grep 'rbenv init' ~/.bashrc || echo 'export PATH="$HOME/.rbenv/bin:$PATH" && eval "$(rbenv init -)"' >> ~/.bashrc
+            "
       - run:
           name: Setup Serverspec
           command: |

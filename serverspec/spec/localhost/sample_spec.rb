@@ -19,7 +19,7 @@ describe command('curl --unix-socket /home/ec2-user/raisetech-live8-sample-app/t
   its(:stdout) { should match /^200$/ }
 end
 
-describe command('ruby -v 2>&1') do
+describe command('source ~/.bashrc && ruby -v 2>&1') do
   its(:stdout) { should match(/ruby ([0-9.]+)/) }
 
   it "should be version >= 3.2.3" do
@@ -30,7 +30,7 @@ describe command('ruby -v 2>&1') do
   end
 end
 
-describe command('bundler -v 2>&1') do
+describe command('source ~/.bashrc && bundler -v 2>&1') do
   its(:stdout) { should match(/version ([0-9.]+)/) }
 
   it "should be version >= 2.3.14" do
@@ -41,7 +41,7 @@ describe command('bundler -v 2>&1') do
   end
 end
 
-describe command('rails -v 2>&1') do
+describe command('source ~/.bashrc && rails -v 2>&1') do
   its(:stdout) { should match(/Rails ([0-9.]+)/) }
 
   it "should be version >= 7.1.3.2" do
