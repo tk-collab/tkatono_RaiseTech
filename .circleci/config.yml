@@ -124,7 +124,7 @@ jobs:
           name: Execute Serverspec
           command: |
             cd serverspec
-            bundle exec rake spec  --format documentation
+            bundle exec rspec --format documentation
 
 workflows:
   lecture13-provisioning:
