@@ -1,0 +1,13 @@
+p#notice = notice
+
+p
+  strong Name:
+  = @fruit.name
+
+p
+  strong Image:
+  - if @fruit.image.attached?
+    = image_tag(@fruit.image)
+= link_to 'Edit', edit_fruit_path(@fruit)
+'|
+= link_to 'Back', fruits_path

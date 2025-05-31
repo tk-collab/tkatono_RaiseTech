@@ -8,10 +8,10 @@ Parameters:
     Type: String
     Default: RaiseTekkun
     
-  MyIP:
-    Description: IP address allowed to access EC2
-    Type: String
-    Default: 119.171.47.244/32
+  # MyIP:
+  #   Description: IP address allowed to access EC2
+  #   Type: String
+  #   Default: 119.171.47.244/32
 
 Resources:
   MyVPC:
@@ -151,23 +151,23 @@ Resources:
           Value: !Sub "${NameBase}-StaticWebsiteBucket"
 
 # セキュリティグループ1作成（EC2インスタンス用）
-  MySecurityGroupEC21:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow SSH and HTTP
-      VpcId: !Ref MyVPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: !Ref MyIP
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
+  # MySecurityGroupEC21:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: Allow SSH and HTTP
+  #     VpcId: !Ref MyVPC
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: !Ref MyIP
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  #     SecurityGroupEgress:
+  #       - IpProtocol: -1
+  #         CidrIp: 0.0.0.0/0
 
 # セキュリティグループ2作成（EC2インスタンス用）
   MySecurityGroupEC22:
@@ -177,13 +177,13 @@ Resources:
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: !Ref MyIP
-        - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           SourceSecurityGroupId: !Ref MySecurityGroupELB
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
 
 # セキュリティグループ3作成（ELB用）
   MySecurityGroupELB:
@@ -216,18 +216,18 @@ Resources:
           CidrIp: 0.0.0.0/0
 
   # EC2インスタンス1作成
-  EC2Instance1:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t2.micro
-      KeyName: raiseTech_keypair_lecture05
-      ImageId: ami-072298436ce5cb0c4
-      SubnetId: !Ref PublicSubnet1
-      SecurityGroupIds:
-        - !Ref MySecurityGroupEC21
-      Tags:
-        - Key: Name
-          Value: !Sub "${NameBase}-EC2Instance1"
+  # EC2Instance1:
+  #   Type: AWS::EC2::Instance
+  #   Properties:
+  #     InstanceType: t2.micro
+  #     KeyName: raiseTech_keypair_lecture05
+  #     ImageId: ami-072298436ce5cb0c4
+  #     SubnetId: !Ref PublicSubnet1
+  #     SecurityGroupIds:
+  #       - !Ref MySecurityGroupEC21
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub "${NameBase}-EC2Instance1"
 
   # EC2インスタンス2作成
   EC2Instance2:
@@ -293,7 +293,7 @@ Resources:
         - !Ref PublicSubnet2
       SecurityGroups:
         - !Ref MySecurityGroupELB
-      Scheme: internal
+      Scheme: internet-facing
       LoadBalancerAttributes:
         - Key: deletion_protection.enabled
           Value: false
@@ -382,3 +382,11 @@ Outputs:
   WebsiteURL:
     Description: URL of the static website
     Value: !Sub "http://${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
+
+  ALBDNSName:
+    Description: ALB DNS Name
+    Value: !GetAtt MyALB.DNSName
+
+  EC2PublicIP:
+    Description: EC2 Public IP
+    Value: !GetAtt EC2Instance2.PublicIp

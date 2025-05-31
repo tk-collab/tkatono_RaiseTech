@@ -1,0 +1,133 @@
+---
+# tasks file for roles/nodejs
+- name: Ensure dev tools and ruby headers are present
+  ansible.builtin.yum:
+    name:
+      - "@Development Tools"
+      - gcc-c++
+      - mysql-devel
+    state: present
+  become: yes
+
+# - name: Remove Gemfile.lock
+#   ansible.builtin.file:
+#     path: "{{ app_dir }}/Gemfile.lock"
+#     state: absent
+
+- name: Install sassc gem version 2.4.0
+  ansible.builtin.shell: |
+    source ~/.bash_profile
+    if ! gem list -i sassc -v 2.4.0 > /dev/null; then
+      gem install sassc -v 2.4.0 --no-document
+    fi
+  args:
+    executable: /bin/bash
+
+- name: Install bigdecimal gem version 3.1.9
+  ansible.builtin.shell: |
+    source ~/.bash_profile
+    if ! gem list -i bigdecimal -v 3.1.9 > /dev/null; then
+      gem install bigdecimal -v 3.1.9 --no-document
+    fi
+  args:
+    executable: /bin/bash
+
+- name: Install bundler_2.4.19
+  shell: |
+    bash -lc '
+      gem install bundler -v 2.4.19
+      '
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Bundler version
+  shell: bash -lc 'bundler -v'
+  register: bundler_version
+
+- name: Show Bundler version
+  debug:
+    var: bundler_version.stdout
+
+- name: Run bundle install in the app directory
+  shell: |
+    bash -lc '
+      bundle _2.4.19_ install
+      # bundle config set --local path 'vendor/bundle'
+      # bundle config set --local clean true
+      # bundle config set --local deployment true
+      # bundle config set --local mirror.https://rubygems.org https://rubygems.org
+      # bundle install
+      '
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Install nvm
+  shell: command curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
+  args:
+    executable: /bin/bash
+
+- name: Install Node.js LTS using nvm
+  shell: |
+    bash -lc '
+      export NVM_DIR="$HOME/.nvm"
+      source "$NVM_DIR/nvm.sh"
+      nvm install {{ node_version }}
+      nvm use {{ node_version }}
+      nvm alias default {{ node_version }}
+    '
+- name: Install yarn globally using npm
+  shell: |
+    bash -lc '
+      source ~/.nvm/nvm.sh
+      npm install -g yarn
+    '
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.nvm/versions/node/v17.9.1/bin:{{ ansible_env.PATH }}"
+
+- name: Set Bundler config without sudo
+  shell: bash -lc 'bundle config set force_ruby_platform true' 
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Copy database.yml.sample to database.yml
+  template:
+    src: database.yml.j2
+    dest: "{{ app_dir }}/config/database.yml"
+  become: yes
+
+- name: Ensure specific versions are set in Gemfile
+  blockinfile:
+    path: /home/ec2-user/raisetech-live8-sample-app/Gemfile
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Set specific gem versions"
+    block: |
+      gem "nokogiri", "~> 1.15.7"
+
+# - name: Unset bundler deployment mode
+#   command: bash -lc 'bundle config unset deployment'
+#   args:
+#     chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Update nokogiri gem using bundle
+  command: bash -lc 'bundle update nokogiri'
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Bundler version
+  shell: bash -lc 'bundler -v'
+  register: bundler_version
+
+- name: Show Bundler version
+  debug:
+    var: bundler_version.stdout
+
+- name: Setup environment
+  shell: bash -lc '/home/ec2-user/raisetech-live8-sample-app/bin/setup'
+  args:
+    chdir: /home/ec2-user/raisetech-live8-sample-app
+
+- name: Restart MySQL service
+  ansible.builtin.systemd:
+    name: mysqld
+    state: restarted
+    enabled: yes
+  become: yes
