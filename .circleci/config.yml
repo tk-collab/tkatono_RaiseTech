@@ -110,6 +110,17 @@ jobs:
             cd serverspec
             bundle install
       - run:
+          name: Debug Environment
+          command: |
+            echo "=== ENV ==="
+            env | sort
+            echo "=== EC2 IP ==="
+            echo $EC2_PUBLIC_IP
+            echo "=== SSH config ==="
+            cat ~/.ssh/config
+            echo "=== Spec files ==="
+            find serverspec/spec
+      - run:
           name: Execute Serverspec
           command: |
             cd serverspec
