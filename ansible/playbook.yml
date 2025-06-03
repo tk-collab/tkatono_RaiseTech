@@ -17,5 +17,4 @@
     - mysql
     - nodejs
     - nginx
-    - puma
     - app_deploy

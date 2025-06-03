@@ -32,6 +32,15 @@
   args:
     executable: /bin/bash
 
+- name: Install mini_magick
+  ansible.builtin.shell: |
+    source ~/.bash_profile
+    if ! gem list -i mini_magick > /dev/null; then
+      gem install mini_magick
+    fi
+  args:
+    executable: /bin/bash
+
 - name: Install bundler_2.4.19
   shell: |
     bash -lc '
