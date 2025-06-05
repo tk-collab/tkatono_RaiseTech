@@ -60,7 +60,7 @@
   become: yes
   template:
     src: _form.html.slim.j2
-    dest: "{{ app_dir }}/app/views/fruits/_form.html.slim.j2"
+    dest: "{{ app_dir }}/app/views/fruits/_form.html.slim"
 
 - name: Enable and start Puma service
   systemd:
