@@ -56,6 +56,12 @@
     src: application.rb.j2
     dest: "{{ app_dir }}/config/application.rb"
 
+- name: _form.html.slim.j2 copy 
+  become: yes
+  template:
+    src: _form.html.slim.j2
+    dest: "{{ app_dir }}/app/views/fruits/_form.html.slim.j2"
+
 - name: Enable and start Puma service
   systemd:
     name: puma
