@@ -35,7 +35,6 @@
   yum:
     name:
       - gcc
-      - glibc-headers
       - make
       - openssl-devel
       - readline-devel
