@@ -15,10 +15,10 @@
 #     src: show.html.slim.j2
 #     dest: "{{ app_dir }}/app/views/fruits/show.html.slim"
 
-- name: purge operation in fruit.rb
-  template:
-    src: fruit.rb.j2
-    dest: "{{ app_dir }}/app/models/fruit.rb"
+# - name: purge operation in fruit.rb
+#   template:
+#     src: fruit.rb.j2
+#     dest: "{{ app_dir }}/app/models/fruit.rb"
 
 # - name: Create tmp subdirectories
 #   ansible.builtin.file:
@@ -56,11 +56,11 @@
     src: application.rb.j2
     dest: "{{ app_dir }}/config/application.rb"
 
-- name: _form.html.slim.j2 copy 
-  become: yes
-  template:
-    src: _form.html.slim.j2
-    dest: "{{ app_dir }}/app/views/fruits/_form.html.slim"
+# - name: _form.html.slim.j2 copy 
+#   become: yes
+#   template:
+#     src: _form.html.slim.j2
+#     dest: "{{ app_dir }}/app/views/fruits/_form.html.slim"
 
 - name: Enable and start Puma service
   systemd:

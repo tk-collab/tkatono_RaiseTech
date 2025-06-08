@@ -374,8 +374,11 @@ Resources:
       PolicyDocument:
         Statement:
           - Effect: Allow
-            Principal: "*"
-            Action: s3:GetObject
+            Principal: arn:aws:iam::396608767997:role/InstanceRole
+            Action: 
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
 
 Outputs:
