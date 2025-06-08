@@ -374,7 +374,8 @@ Resources:
       PolicyDocument:
         Statement:
           - Effect: Allow
-            Principal: arn:aws:iam::396608767997:role/InstanceRole
+            Principal:
+              AWS: arn:aws:iam::396608767997:role/InstanceRole
             Action: 
               - s3:GetObject
               - s3:PutObject
