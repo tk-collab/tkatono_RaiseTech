@@ -31,3 +31,8 @@ tkatono_RaiseTech
 |            第 13 回             |                    | ・ Ansible を導入<br>・ CircleCI に CloudFormation, Ansible, Serverspec のパイプラインを作成して自動化                       | [lecture13.md](lecture13.md) |
 |          第 14, 15 回           |                    | ・ ライブコーディング                                                                                                        |                   -                    |
 |            第 16 回             |                    | ・ エンジニアとしての心構え<br>・現場での立ち振る舞い                                                                        |                   -                    |
+
+4. Event Bridge SchedulerによるRDSの定期停止スケジュール  
+　RDSはEC2のように永続的な停止（terminateではない）ができない仕様となっているため。そのままでは勝手に起動されて予期せぬコストが発生する事が懸念される。対策としては本件のEvent Bridge Schedulerによるものや使わない間はスナップショットとして保存しておく等の対策があるが今回はEvent Bridge Schedulerによる対策を実施。  
+![Result](screenshots/Screenshot-2025-06-08-150119.png) 
+*学んだこと：Event Bridge SchedulerはRegion固有なんで同じRegion内で作ること必須
