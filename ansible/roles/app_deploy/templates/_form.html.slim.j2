@@ -1,0 +1,15 @@
+= form_for @fruit, html: { multipart: true, data: { turbo: false } } do |f|
+  - if @fruit.errors.any?
+    #error_explanation
+      h2 = "#{pluralize(@fruit.errors.count, "error")} prohibited this fruit from being saved:"
+      ul
+        - @fruit.errors.full_messages.each do |message|
+          li = message
+
+  .field
+    = f.label :name
+    = f.text_field :name
+    br
+    = f.label :image
+    = f.file_field :image
+  .actions = f.submit 'Save'

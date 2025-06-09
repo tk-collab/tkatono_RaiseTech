@@ -1,9 +1,9 @@
 ---
 # tasks file for roles/app_deploy
-# - name: copy of storage.yml
-#   template:
-#     src: storage.yml.j2
-#     dest: "{{ app_dir }}/config/storage.yml"
+- name: copy of storage.yml
+  template:
+    src: storage.yml.j2
+    dest: "{{ app_dir }}/config/storage.yml"
 
 # - name: remove resize and upload operation in index.html.slim
 #   template:
@@ -49,6 +49,18 @@
   template:
     src: development.rb.j2
     dest: "{{ app_dir }}/config/environments/development.rb"
+
+- name: application.rb copy 
+  become: yes
+  template:
+    src: application.rb.j2
+    dest: "{{ app_dir }}/config/application.rb"
+
+# - name: _form.html.slim.j2 copy 
+#   become: yes
+#   template:
+#     src: _form.html.slim.j2
+#     dest: "{{ app_dir }}/app/views/fruits/_form.html.slim"
 
 - name: Enable and start Puma service
   systemd:

@@ -1,9 +1,9 @@
 class Fruit < ApplicationRecord
   include RankedModel
-  ranks :row_order
+  ranks :row_order, column: :row_order
 
   has_one_attached :image
-
+{#
   before_destroy :purge_image
 
   private
@@ -11,5 +11,6 @@ class Fruit < ApplicationRecord
   def purge_image
     image.purge
   end
+#}
 end
 

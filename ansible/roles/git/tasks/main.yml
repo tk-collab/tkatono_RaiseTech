@@ -43,6 +43,7 @@
       - bzip2-devel
       - libffi-devel
       - libyaml-devel
+      - ImageMagick
     state: present
   become: yes
 
