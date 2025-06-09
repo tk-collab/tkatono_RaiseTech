@@ -1,9 +1,9 @@
 ---
 # tasks file for roles/app_deploy
-# - name: copy of storage.yml
-#   template:
-#     src: storage.yml.j2
-#     dest: "{{ app_dir }}/config/storage.yml"
+- name: copy of storage.yml
+  template:
+    src: storage.yml.j2
+    dest: "{{ app_dir }}/config/storage.yml"
 
 # - name: remove resize and upload operation in index.html.slim
 #   template:
