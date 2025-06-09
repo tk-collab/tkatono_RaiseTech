@@ -369,7 +369,6 @@ Resources:
   # バケットポリシー（公開アクセスを許可）
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
-    DependsOn: InstanceRole
     Properties:
       Bucket: !Ref StaticWebsiteBucket
       PolicyDocument:
