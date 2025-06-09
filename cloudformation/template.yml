@@ -369,13 +369,14 @@ Resources:
   # バケットポリシー（公開アクセスを許可）
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
+    DependsOn: InstanceRole
     Properties:
       Bucket: !Ref StaticWebsiteBucket
       PolicyDocument:
         Statement:
           - Effect: Allow
             Principal:
-              AWS: arn:aws:iam::396608767997:role/InstanceRole
+              AWS: !GetAtt InstanceRole.Arn
             Action: 
               - s3:GetObject
               - s3:PutObject
