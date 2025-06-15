@@ -48,6 +48,9 @@
       - libffi-devel
       - libyaml-devel
       - ImageMagick
+      - glibc-devel
+      - libstdc++
+      - libstdc++-devel
     state: present
   become: yes
 
