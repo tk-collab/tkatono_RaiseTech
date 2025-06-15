@@ -8,7 +8,11 @@
 #   delay: 10  # 10秒間隔で再試行
 #   register: result
 #   until: result.failed == false  # 成功するまで再試行
-
+- name: Update yum
+  become: yes
+  yum:
+    name: "*"
+    state: latest
 # - name: install tools
 #   become: yes
 #   yum:
