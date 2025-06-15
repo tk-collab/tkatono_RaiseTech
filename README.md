@@ -36,3 +36,6 @@ tkatono_RaiseTech
 　RDSはEC2のように永続的な停止（terminateではない）ができない仕様となっているため。そのままでは勝手に起動されて予期せぬコストが発生する事が懸念される。対策としては本件のEvent Bridge Schedulerによるものや使わない間はスナップショットとして保存しておく等の対策があるが今回はEvent Bridge Schedulerによる対策を実施。  
 ![Result](screenshots/Screenshot-2025-06-08-150119.png) 
 *学んだこと：Event Bridge SchedulerはRegion固有なんで同じRegion内で作ること必須
+
+5. AL2の場合,VSCodeServerを使用したSSH接続はGLIBCのバージョンが対応していないため不可
+　AL2023をであれば可能
