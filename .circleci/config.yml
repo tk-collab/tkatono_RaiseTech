@@ -53,9 +53,11 @@ jobs:
             AWS_ALB_DNS_NAME=$(aws cloudformation describe-stacks --stack-name lecture13-stack --query "Stacks[0].Outputs[?OutputKey=='ALBDNSName'].OutputValue" --output text)
             EC2_PUBLIC_IP=$(aws cloudformation describe-stacks --stack-name lecture13-stack --query "Stacks[0].Outputs[?OutputKey=='EC2PublicIP'].OutputValue" --output text)
             AWS_S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name lecture13-stack --query "Stacks[0].Outputs[?OutputKey=='S3BucketName'].OutputValue" --output text)
+            CLOUDFRONT_DOMAIN=$(aws cloudformation describe-stacks --stack-name your-cloudfront-stack-name --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDomain'].OutputValue" --output text)
             echo "export AWS_ALB_DNS_NAME=${AWS_ALB_DNS_NAME}" >> $BASH_ENV
             echo "export AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}" >> $BASH_ENV
             echo "${EC2_PUBLIC_IP} ansible_connection=ssh ansible_user=ec2-user" > ansible/inventory.ini
+            echo "export CLOUDFRONT_DOMAIN=${CLOUDFRONT_DOMAIN}" >> $BASH_ENV
 
             cat $BASH_ENV
             cat ansible/inventory.ini

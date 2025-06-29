@@ -7,6 +7,10 @@ Parameters:
     Description: this is base name.
     Type: String
     Default: RaiseTekkun
+
+  ALBDomainName:
+    Type: String
+    Description: The DNS name of the ALB (e.g., my-alb-123456.us-east-1.elb.amazonaws.com)
     
   # MyIP:
   #   Description: IP address allowed to access EC2
@@ -382,6 +386,39 @@ Resources:
               - s3:DeleteObject
             Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
 
+  MyCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Origins:
+          - Id: ALBOrigin
+            DomainName: !Ref ALBDomainName
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+        DefaultCacheBehavior:
+          TargetOriginId: ALBOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            - PUT
+            - POST
+            - PATCH
+            - DELETE
+          CachedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: 413fdacd-14eb-4b3a-bb99-5f9f137ed1c7  # AWS managed: CacheDisabled
+          OriginRequestPolicyId: 59781a5b-3903-41f3-afcb-af62929ccde1  # AWS managed: AllViewerExceptHostHeader
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+
 Outputs:
   WebsiteURL:
     Description: URL of the static website
@@ -390,6 +427,12 @@ Outputs:
   ALBDNSName:
     Description: ALB DNS Name
     Value: !GetAtt MyALB.DNSName
+
+  CloudFrontDomain:
+    Description: CloudFront Distribution Domain Name
+    Value: !GetAtt MyCloudFrontDistribution.DomainName
+    Export:
+      Name: CloudFrontDomain
 
   EC2PublicIP:
     Description: EC2 Public IP

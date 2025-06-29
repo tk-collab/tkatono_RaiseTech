@@ -15,3 +15,10 @@
     - 一度Ansibleを実行すると、二回目に再度実行用とした時になぜかSSHができない事象が発生。これでまた2,3日悩む。ディレクトリのパーミッションが緩すぎたことが原因。エラーが発生した時はコードそのものと合わせて、実行前後の手順も確認することが大事と学びました。
 5. 残課題  
     \*1はAnsibleに未反映
+6. CloudFrontによるHTTPS化  
+    無料でできるCloudFrontによるHTTPS化を実施。  
+        1. config.action_controller.forgery_protection_origin_check = false  
+    をdevelopment.rbに追加しないといけない等いくつかのRuby側の調整が必要  
+    CloudFrontは下記の設定  
+        1. CacheDisabled  
+        2. AllViewerExceptHostHeader

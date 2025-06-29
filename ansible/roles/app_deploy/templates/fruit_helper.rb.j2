@@ -1,0 +1,8 @@
+module FruitHelper
+  def cdn_image_tag(image, resize:)
+    return unless image.attached?
+
+    variant = image.variant(resize_to_fill: resize).processed
+    image_tag rails_representation_url(variant, host: "https://{{ lookup('env', 'CLOUDFRONT_DOMAIN') }}")
+  end
+end
