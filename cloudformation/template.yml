@@ -9,8 +9,9 @@ Parameters:
     Default: RaiseTekkun
 
   ALBDomainName:
-    Type: String
     Description: The DNS name of the ALB (e.g., my-alb-123456.us-east-1.elb.amazonaws.com)
+    Type: String
+    Default: 
     
   # MyIP:
   #   Description: IP address allowed to access EC2
@@ -427,7 +428,9 @@ Outputs:
   ALBDNSName:
     Description: ALB DNS Name
     Value: !GetAtt MyALB.DNSName
-
+    Export:
+      Name: ALBDomainName
+      
   CloudFrontDomain:
     Description: CloudFront Distribution Domain Name
     Value: !GetAtt MyCloudFrontDistribution.DomainName
