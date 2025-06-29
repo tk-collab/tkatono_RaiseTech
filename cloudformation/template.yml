@@ -8,9 +8,9 @@ Parameters:
     Type: String
     Default: RaiseTekkun
 
-  ALBDomainName:
-    Description: The DNS name of the ALB (e.g., my-alb-123456.us-east-1.elb.amazonaws.com)
-    Type: String
+  # ALBDomainName:
+  #   Description: The DNS name of the ALB (e.g., my-alb-123456.us-east-1.elb.amazonaws.com)
+  #   Type: String
     
   # MyIP:
   #   Description: IP address allowed to access EC2
@@ -393,7 +393,7 @@ Resources:
         Enabled: true
         Origins:
           - Id: ALBOrigin
-            DomainName: !Ref ALBDomainName
+            DomainName: !GetAtt MyALB.DNSName
             CustomOriginConfig:
               HTTPPort: 80
               HTTPSPort: 443
@@ -424,11 +424,11 @@ Outputs:
     Description: URL of the static website
     Value: !Sub "http://${StaticWebsiteBucket}.s3-website-${AWS::Region}.amazonaws.com"
 
-  ALBDNSName:
-    Description: ALB DNS Name
-    Value: !GetAtt MyALB.DNSName
-    Export:
-      Name: ALBDomainName
+  # ALBDNSName:
+  #   Description: ALB DNS Name
+  #   Value: !GetAtt MyALB.DNSName
+  #   Export:
+  #     Name: ALBDomainName
 
   CloudFrontDomain:
     Description: CloudFront Distribution Domain Name
