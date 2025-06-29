@@ -412,7 +412,7 @@ Resources:
           CachedMethods:
             - GET
             - HEAD
-          CachePolicyId: 413fdacd-14eb-4b3a-bb99-5f9f137ed1c7  # AWS managed: CacheDisabled
+          CachePolicyId: 413fede8-84ff-4bdc-8f59-cd3f761349c3  # AWS managed: CacheDisabled
           OriginRequestPolicyId: 59781a5b-3903-41f3-afcb-af62929ccde1  # AWS managed: AllViewerExceptHostHeader
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
