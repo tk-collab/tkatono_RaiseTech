@@ -13,7 +13,7 @@ table.table.table-bordered.table-sortable
     - @fruits.each do |fruit|
       tr.item(data = { model_name: fruit.class.name.underscore, update_url: fruits_path(fruit) })
         td = fruit.name
-        td = fruit.image.attached? ? image_tag(fruit.image) : nil
+        td = cdn_image_tag(fruit.image, resize: [100, nil])
         td = link_to 'Show', fruit
         td = link_to 'Edit', edit_fruit_path(fruit)
         td = link_to 'Destroy', fruit, data: { "turbo-method": :delete , "turbo-confirm": "Are you sure?" }

@@ -10,10 +10,15 @@
 #     src: index.html.slim.j2
 #     dest: "{{ app_dir }}/app/views/fruits/index.html.slim"
 
-# - name: remove resize and upload operation in show.html.slim
-#   template:
-#     src: show.html.slim.j2
-#     dest: "{{ app_dir }}/app/views/fruits/show.html.slim"
+- name: remove resize and upload operation, and correspond CloundFront in show.html.slim
+  template:
+    src: show.html.slim.j2
+    dest: "{{ app_dir }}/app/views/fruits/show.html.slim"
+
+- name: Correspond CloundFront in fruit_helper.rb.j2
+  template:
+    src: fruit_helper.rb.j2
+    dest: "{{ app_dir }}/app/helpers/fruit_helper.rb"
 
 # - name: purge operation in fruit.rb
 #   template:
@@ -56,11 +61,11 @@
     src: application.rb.j2
     dest: "{{ app_dir }}/config/application.rb"
 
-# - name: _form.html.slim.j2 copy 
-#   become: yes
-#   template:
-#     src: _form.html.slim.j2
-#     dest: "{{ app_dir }}/app/views/fruits/_form.html.slim"
+- name: index.html.slim.j2 copy 
+  become: yes
+  template:
+    src: index.html.slim.j2
+    dest: "{{ app_dir }}/app/views/fruits/index.html.slim"
 
 - name: Enable and start Puma service
   systemd:
