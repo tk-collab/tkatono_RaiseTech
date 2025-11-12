@@ -2,11 +2,11 @@ tkatono_RaiseTech
 --
 # CircleCI, CloudFormation, Ansible, ServerSpec を用いて、Rails アプリケーションの環境構築およびデプロイの自動化
 
-1. 成果物  
+#### 1. 成果物  
 　IaCの全体の流れを確認するためにGithubに全体公開されているRubyで書かれたサンプルアプリ（自作したものではない）をAWS環境に構築し、CI/CDの一連の環境を構築しています。
 　このリポジトリは表題のハンズオンを目的とした一連の過程を表しています。したがってそれぞれのフォルダは独立して存在しているわけではなく、最終的にはLecture13が最終的な成果物となります。  
  
-2. CircleCI で実装したパイプライン  
+#### 2. CircleCI で実装したパイプライン  
     - cfn-lint による AWS CloudFormation の構文チェック
     - AWS CloudFormation を実行して AWS 環境を構築
     - Ansible を利用して サンプルRails アプリケーションの環境を自動構築
@@ -14,7 +14,7 @@ tkatono_RaiseTech
   
     ※EC2 のキーペアについては、事前に手動作成したものを CircleCI の環境変数に組み込んで使用します。
 
-3. RaiseTech（オンラインエンジニアスクール）の講義内容と課題
+#### 3. RaiseTech（オンラインエンジニアスクール）の講義内容と課題
 
 | 講義<br> （全&nbsp;16&nbsp;回） |     学習テーマ     | 講義内容                                                                                                                     |                  課題                  |
 | :-----------------------------: | :----------------: | ---------------------------------------------------------------------------------------------------------------------------- | :------------------------------------: |
@@ -33,13 +33,13 @@ tkatono_RaiseTech
 |          第 14, 15 回           |                    | ・ ライブコーディング                                                                                                        |                   -                    |
 |            第 16 回             |                    | ・ エンジニアとしての心構え<br>・現場での立ち振る舞い                                                                        |                   -                    |
 
-4. Event Bridge SchedulerによるRDSの定期停止スケジュール  
+#### 4. Event Bridge SchedulerによるRDSの定期停止スケジュール  
 　RDSはEC2のように永続的な停止（terminateではない）ができない仕様となっているため。そのままでは勝手に起動されて予期せぬコストが発生する事が懸念される。対策としては本件のEvent Bridge Schedulerによるものや使わない間はスナップショットとして保存しておく等の対策があるが今回はEvent Bridge Schedulerによる対策を実施。  
 ![Result](screenshots/Screenshot-2025-06-08-150119.png) 
 *学んだこと：Event Bridge SchedulerはRegion固有なんで同じRegion内で作ること必須
 
-5. AL2の場合,VSCodeServerを使用したSSH接続はGLIBCのバージョンが対応していないため不可
+#### 5. AL2の場合,VSCodeServerを使用したSSH接続はGLIBCのバージョンが対応していないため不可
 　AL2023をであれば可能
 
-6. 気づきなど
+#### 6. 気づきなど  
   SSHが出来ないときはそのSSHされる側のホームディレクトリのパーミッションに注意：SSHした後そのホームディレクトリに移動することになるためそこでパーミッションが無いとSSHが"Permission denied (publickey,gssapi-keyex,gssapi-with-mic)."になる。
