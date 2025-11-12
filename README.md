@@ -40,3 +40,6 @@ tkatono_RaiseTech
 
 5. AL2の場合,VSCodeServerを使用したSSH接続はGLIBCのバージョンが対応していないため不可
 　AL2023をであれば可能
+
+6. 気づきなど
+  SSHが出来ないときはそのSSHされる側のホームディレクトリのパーミッションに注意：SSHした後そのホームディレクトリに移動することになるためそこでパーミッションが無いとSSHが"Permission denied (publickey,gssapi-keyex,gssapi-with-mic)."になる。
