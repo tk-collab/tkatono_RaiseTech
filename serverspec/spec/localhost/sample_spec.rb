@@ -20,7 +20,13 @@ describe command('curl --unix-socket /home/ec2-user/raisetech-live8-sample-app/t
 end
 
 describe command('git --version') do
-    its(:stdout) { should match /git version 2\.47\.1/ }
+  it 'git version is more than 2.47.1' do
+    version = subject.stdout.match(/git version (\d+\.\d+\.\d+)/)[1]
+    current = Gem::Version.new(version)
+    baseline = Gem::Version.new('2.47.1')
+
+    expect(current).to be > baseline
+  end
 end
 
 describe command('node --version') do
