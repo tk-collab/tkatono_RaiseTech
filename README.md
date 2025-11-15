@@ -42,4 +42,5 @@ tkatono_RaiseTech
 　AL2023をであれば可能
 
 #### 6. 気づきなど  
-  SSHが出来ないときはそのSSHされる側のホームディレクトリのパーミッションに注意：SSHした後そのホームディレクトリに移動することになるためそこでパーミッションが無いとSSHが"Permission denied (publickey,gssapi-keyex,gssapi-with-mic)."になる。
+    - SSHが出来ないときはそのSSHされる側のホームディレクトリのパーミッションに注意：SSHした後そのホームディレクトリに移動することになるためそこでパーミッションが無いとSSHが"Permission denied (publickey,gssapi-keyex,gssapi-with-mic)."になる。
+    - RDSが作成され、スタック削除されると同時にSnapshotが自動作成され続けていることにコストを圧迫していることに気づいた。RDSのリソース作成時に"DeletionPlicy: Delete"を指定することで回避できる。
