@@ -351,6 +351,7 @@ Resources:
   # RDS インスタンス
   MyRDSInstance:
     Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
     Properties:
       DBInstanceIdentifier: my-rds-instance
       Engine: mysql
